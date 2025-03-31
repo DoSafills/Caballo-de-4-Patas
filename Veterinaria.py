@@ -5,10 +5,23 @@ class VeterinariaApp:
         self.root = root
         self.root.title("Sistema Veterinario")
         self.root.geometry("1800x900")
+
+        # Datos de ejemplo de los animales, datos simulados
+        self.animales = [
+            {"nombre": "Max", "edad": 5, "cliente": "Juan Pérez"},
+            {"nombre": "Luna", "edad": 3, "cliente": "Ana Gómez"},
+            {"nombre": "Rocky", "edad": 2, "cliente": "Carlos López"},
+            {"nombre": "Milo", "edad": 1, "cliente": "Sofía Ramírez"},
+            {"nombre": "Bobby", "edad": 4, "cliente": "Pedro Sánchez"},
+        ]
         
         # frames de secciones /////////////////////
         self.frame_busqueda = ctk.CTkFrame(root, width=980, height=100)
         self.frame_busqueda.place(x=10, y=10)
+
+        # resultados de busqueda
+        self.frame_resultados = ctk.CTkFrame(root, width=600, height=300)
+        self.frame_resultados.place(x=10, y=90)
         
         self.frame_datos_animal = ctk.CTkFrame(root, width=980, height=370)
         self.frame_datos_animal.place(x=10, y=300)
@@ -23,7 +36,8 @@ class VeterinariaApp:
         self.frame_adicion.place(x=1010, y=650)
         
         self.crear_seccion_busqueda()
-      
+        self.crear_seccion_resultados()
+
         self.crear_seccion_datos_animal() 
         self.crear_seccion_factura()
         self.crear_seccion_avisos()
@@ -50,7 +64,7 @@ class VeterinariaApp:
         cliente_entry = ctk.CTkEntry(self.frame_busqueda, width=100)
         cliente_entry.grid(row=1, column=1, padx=5, pady=5)
         
-        buscar_button = ctk.CTkButton(self.frame_busqueda, text="🔍", width=30)
+        buscar_button = ctk.CTkButton(self.frame_busqueda, text="🔍", width=30, command=self.filtrar_animales)
         buscar_button.grid(row=1, column=2, padx=5, pady=5)
         
         cliente_info = ctk.CTkEntry(self.frame_busqueda, width=200)
@@ -59,9 +73,32 @@ class VeterinariaApp:
         ver_ficha_button = ctk.CTkButton(self.frame_busqueda, text="Ver ficha cliente")
         ver_ficha_button.grid(row=1, column=4, padx=5, pady=5)
     
-    def crear_seccion_datos_animal(self):
-   
+    # Seccion de resultados
+    def crear_seccion_resultados(self):
+        ctk.CTkLabel(self.frame_resultados, text="Resultados:").grid(row=0, column=0, sticky='w')
 
+        self.text_resultados = ctk.CTkTextbox(self.frame_resultados, width=500, height=200)
+        self.text_resultados.grid(row=1, column=0)
+
+    def filtrar_animales(self):
+        criterio = self.entry_busqueda.get().strip().lower()
+        self.text_resultados.delete("1.0", "end")  # Limpiar resultados
+        
+        if criterio:
+            filtrados = [
+                f"Nombre: {a['nombre']}, Especie: {a['especie']}, Edad: {a['edad']} años, Cliente: {a['cliente']}"
+                for a in self.animales if criterio in a["nombre"].lower()
+            ]
+            
+            if filtrados:
+                for item in filtrados:
+                    self.text_resultados.insert("end", item + "\n")
+            else:
+                self.text_resultados.insert("end", "No se encontraron resultados.")
+        else:
+            self.text_resultados.insert("end", "Ingrese un criterio de búsqueda.")
+
+    def crear_seccion_datos_animal(self):
         ctk.CTkLabel(self.frame_datos_animal, text="Nombre:").grid(row=0, column=0, sticky='w')
         ctk.CTkEntry(self.frame_datos_animal).grid(row=0, column=1)
         
