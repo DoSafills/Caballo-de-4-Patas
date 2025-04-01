@@ -45,8 +45,8 @@ class VeterinariaApp:
 
     def crear_seccion_busqueda(self):
         ctk.CTkLabel(self.frame_busqueda, text="Nombre:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
-        nombre_entry = ctk.CTkEntry(self.frame_busqueda, width=150)
-        nombre_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.nombre_entry = ctk.CTkEntry(self.frame_busqueda, width=150)
+        self.nombre_entry.grid(row=0, column=1, padx=5, pady=5)
         
         ctk.CTkLabel(self.frame_busqueda, text="F. Nacimiento:").grid(row=0, column=2, sticky='w', padx=5, pady=5)
         nacimiento_entry = ctk.CTkEntry(self.frame_busqueda, width=100)
@@ -81,12 +81,12 @@ class VeterinariaApp:
         self.text_resultados.grid(row=1, column=0)
 
     def filtrar_animales(self):
-        criterio = self.entry_busqueda.get().strip().lower()
+        criterio = self.nombre_entry.get().strip().lower()
         self.text_resultados.delete("1.0", "end")  # Limpiar resultados
         
         if criterio:
             filtrados = [
-                f"Nombre: {a['nombre']}, Especie: {a['especie']}, Edad: {a['edad']} años, Cliente: {a['cliente']}"
+                f"Nombre: {a['nombre']}, Edad: {a['edad']} años, Cliente: {a['cliente']}"
                 for a in self.animales if criterio in a["nombre"].lower()
             ]
             
