@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import sqlite3
 
 class VeterinariaApp:
     def __init__(self, root):
@@ -6,39 +7,8 @@ class VeterinariaApp:
         self.root.title("Sistema Veterinario")
         self.root.geometry("1800x900")
 
-        # Debe mostrar: chapa, nombre, raza, sexo, dieta, caracter, habitat,
-        # edad, peso, altura, rut_veterinario
+        self.db_path = "local_database.db"  # Ruta a la base de datos
 
-        # Datos de ejemplo de los animales, datos simulados (Borra mas tarde)
-        self.animales = [
-            {
-                "chapa": 1, "nombre": "Max", "raza": "Labrador", "sexo": "Macho",
-                "dieta": "Balanceada", "caracter": "Amigable", "habitat": "Casa",
-                "edad": 5, "peso": 30, "altura": 60, "rut_veterinario": "12345678-9"
-            },
-            {
-                "chapa": 2, "nombre": "Luna", "raza": "Golden Retriever", "sexo": "Hembra",
-                "dieta": "Barf", "caracter": "Juguetona", "habitat": "Casa",
-                "edad": 3, "peso": 25, "altura": 55, "rut_veterinario": "87654321-0"
-            },
-            {
-                "chapa": 3, "nombre": "Rocky", "raza": "Bulldog", "sexo": "Macho",
-                "dieta": "Pienso", "caracter": "Tranquilo", "habitat": "Departamento",
-                "edad": 2, "peso": 20, "altura": 40, "rut_veterinario": "11223344-5"
-            },
-            {
-                "chapa": 4, "nombre": "Milo", "raza": "Beagle", "sexo": "Macho",
-                "dieta": "Comida casera", "caracter": "Curioso", "habitat": "Casa",
-                "edad": 1, "peso": 10, "altura": 35, "rut_veterinario": "55667788-3"
-            },
-            {
-                "chapa": 5, "nombre": "Bobby", "raza": "Pastor Alemán", "sexo": "Macho",
-                "dieta": "Balanceada", "caracter": "Protector", "habitat": "Casa con patio",
-                "edad": 4, "peso": 35, "altura": 65, "rut_veterinario": "99887766-2"
-            }
-        ]
-
-        
         # frames de secciones /////////////////////
         self.frame_busqueda = ctk.CTkFrame(root, width=980, height=100)
         self.frame_busqueda.place(x=10, y=10)
@@ -73,40 +43,43 @@ class VeterinariaApp:
         self.text_resultados = ctk.CTkTextbox(self.frame_resultados, width=500, height=200)
         self.text_resultados.grid(row=1, column=0)
 
+    def conectar_db(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        return conn, cursor
+
     def filtrar_animales(self):
-        criterio = self.criterio_busqueda.get()  # Obtener si se busca por "Nombre" o "ID"
+        criterio = self.criterio_busqueda.get()
         valor = self.entry_busqueda.get().strip().lower()
         self.text_resultados.delete("1.0", "end")  # Limpiar resultados
 
-        filtrados = []
-
-        # Criterio debe tener el mismo nombre que la ComboBox en las opciones
-
-        if valor:
-            if criterio == "Nombre":
-                filtrados = [
-                    f"Chapa: {a['chapa']}, Nombre: {a['nombre']}, Raza: {a['raza']}, Sexo: {a['sexo']}, "
-                    f"Dieta: {a['dieta']}, Carácter: {a['caracter']}, Hábitat: {a['habitat']}, "
-                    f"Edad: {a['edad']} años, Peso: {a['peso']} kg, Altura: {a['altura']} cm, "
-                    f"RUT Veterinario: {a['rut_veterinario']}"
-                    for a in self.animales if valor in a["nombre"].lower()
-                ]
-            elif criterio == "Chapa":
-                filtrados = [
-                    f"Chapa: {a['chapa']}, Nombre: {a['nombre']}, Raza: {a['raza']}, Sexo: {a['sexo']}, "
-                    f"Dieta: {a['dieta']}, Carácter: {a['caracter']}, Hábitat: {a['habitat']}, "
-                    f"Edad: {a['edad']} años, Peso: {a['peso']} kg, Altura: {a['altura']} cm, "
-                    f"RUT Veterinario: {a['rut_veterinario']}"
-                    for a in self.animales if valor == str(a["chapa"])
-                ]
-
-            if filtrados:
-                for item in filtrados:
-                    self.text_resultados.insert("end", item + "\n")
-            else:
-                self.text_resultados.insert("end", "No se encontraron resultados.")
-        else:
+        if not valor:
             self.text_resultados.insert("end", "Ingrese un criterio de búsqueda.")
+            return
+
+        conn, cursor = self.conectar_db()
+
+        if criterio == "Nombre":
+            query = "SELECT * FROM mascotas WHERE LOWER(nombre) LIKE ?"
+            cursor.execute(query, ('%' + valor + '%',))
+        elif criterio == "Chapa":
+            query = "SELECT * FROM mascotas WHERE LOWER(chapa) = ?"
+            cursor.execute(query, (valor,))
+
+        resultados = cursor.fetchall()
+        conn.close()
+
+        if resultados:
+            for a in resultados:
+                texto = (
+                    f"Chapa: {a[0]}, Nombre: {a[1]}, Raza: {a[2]}, Sexo: {a[3]}, "
+                    f"Dieta: {a[4]}, Carácter: {a[5]}, Hábitat: {a[6]}, "
+                    f"Edad: {a[7]} años, Peso: {a[8]} kg, Altura: {a[9]} cm, "
+                    f"RUT Veterinario: {a[10]}"
+                )
+                self.text_resultados.insert("end", texto + "\n")
+        else:
+            self.text_resultados.insert("end", "No se encontraron resultados.")
     
 if __name__ == "__main__":
     root = ctk.CTk()

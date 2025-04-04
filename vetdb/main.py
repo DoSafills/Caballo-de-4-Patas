@@ -22,6 +22,10 @@ def main():
     mascota = crud.crear_mascota(db, "CHP001", "Firulais", "Labrador", "Macho", "Carnívora", "Amigable", "Casa", 5, "25kg", "60cm", "12345678-9")
     logging.info(f"Mascota creada: {mascota.nombre}, atendida por {mascota.veterinario.nombre}")
 
+    logging.info("Insertando mascota de prueba...")
+    mascota = crud.crear_mascota(db, "CHP002", "Fifi", "Labrador", "Macho", "Carnívora", "Amigable", "Casa", 5, "25kg", "60cm", "12345678-9")
+    logging.info(f"Mascota creada: {mascota.nombre}, atendida por {mascota.veterinario.nombre}")
+
     # Obtener y mostrar todos los veterinarios
     veterinarios = crud.obtener_veterinarios(db)
     logging.info(f"Veterinarios registrados: {[v.nombre for v in veterinarios]}")
