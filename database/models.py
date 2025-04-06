@@ -5,9 +5,8 @@ class Database:
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
         self._create_tables()
-    
+
     def _create_tables(self):
-        """Crea todas las tablas al inicializar"""
         schemas = [
             '''CREATE TABLE IF NOT EXISTS clientes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,12 +18,16 @@ class Database:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT NOT NULL,
                 especie TEXT,
+                peso REAL,
+                edad INTEGER,
+                sexo TEXT,
+                caracter TEXT,
                 cliente_id INTEGER,
                 FOREIGN KEY (cliente_id) REFERENCES clientes(id)
             )'''
-            # ... (otros schemas)
+            # Añade más tablas según sea necesario
         ]
-        
+
         for schema in schemas:
             self.cursor.execute(schema)
         self.conn.commit()
