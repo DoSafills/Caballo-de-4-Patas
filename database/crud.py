@@ -1,5 +1,4 @@
 from .models import Database
-
 class AnimalCRUD:
     def __init__(self):
         self.db = Database()
@@ -18,5 +17,13 @@ class AnimalCRUD:
             (cliente_id,)
         )
         return self.db.cursor.fetchall()
+
+    def save_animal(self, data):
+        """Guarda un nuevo animal en la BD"""
+        self.db.cursor.execute('''
+        INSERT INTO animales (nombre, peso, edad, sexo, especie, caracter, cliente)
+        VALUES (?, ?, ?, ?, ?, ?, ?)''', data)
+        self.db.conn.commit()
+        return self.db.cursor.lastrowid
 
 # ... (similar para ClienteCRUD, ServicioCRUD, etc.)
