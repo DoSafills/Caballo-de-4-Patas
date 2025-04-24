@@ -1,167 +1,225 @@
+
 from sqlalchemy.orm import Session
-from models import Veterinario, Mascota
-from sqlalchemy.exc import SQLAlchemyError
+from models import Persona, Admin, Recepcionista, Cliente, Veterinario, Mascota, Consulta
 
-# ---------------------- CRUD Veterinario ----------------------
+# ---------------------
+# CRUD Persona (base)
+# ---------------------
+def crear_persona(db: Session, datos: dict):
+    persona = Persona(**datos)
+    db.add(persona)
+    db.commit()
+    db.refresh(persona)
+    return persona
 
-def crear_veterinario(db: Session, rut: str, nombre: str, apellido: str, edad: int, especializacion: str, contrasena: str):
-    """Crea un nuevo veterinario en la base de datos."""
-    try:
-        nuevo_veterinario = Veterinario(
-            rut_veterinario=rut,
-            nombre=nombre,
-            apellido=apellido,
-            edad=edad,
-            especializacion=especializacion,
-            contrasena=contrasena
-        )
-        db.add(nuevo_veterinario)
+def obtener_persona(db: Session, rut: str):
+    return db.query(Persona).filter_by(rut=rut).first()
+
+def actualizar_persona(db: Session, rut: str, nuevos_datos: dict):
+    persona = obtener_persona(db, rut)
+    if persona:
+        for k, v in nuevos_datos.items():
+            setattr(persona, k, v)
         db.commit()
-        db.refresh(nuevo_veterinario)
-        return nuevo_veterinario
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al crear veterinario: {e}")
-        return None
+        db.refresh(persona)
+    return persona
 
-def obtener_veterinarios(db: Session):
-    """Obtiene todos los veterinarios registrados."""
-    return db.query(Veterinario).all()
-
-def obtener_veterinario_por_rut(db: Session, rut: str):
-    """Obtiene un veterinario por su RUT."""
-    return db.query(Veterinario).filter(Veterinario.rut_veterinario == rut).first()
-
-def actualizar_veterinario(db: Session, rut: str, nombre: str = None, apellido: str = None, edad: int = None, especializacion: str = None, contrasena: str = None):
-    """Actualiza los datos de un veterinario."""
-    veterinario = obtener_veterinario_por_rut(db, rut)
-    if not veterinario:
-        return None
-    try:
-        if nombre:
-            veterinario.nombre = nombre
-        if apellido:
-            veterinario.apellido = apellido
-        if edad:
-            veterinario.edad = edad
-        if especializacion:
-            veterinario.especializacion = especializacion
-        if contrasena:
-            veterinario.contrasena = contrasena  # Permitir actualizar contraseña
+def eliminar_persona(db: Session, rut: str):
+    persona = obtener_persona(db, rut)
+    if persona:
+        db.delete(persona)
         db.commit()
-        db.refresh(veterinario)
-        return veterinario
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al actualizar veterinario: {e}")
-        return None
+    return persona
 
-def eliminar_veterinario(db: Session, rut: str):
-    """Elimina un veterinario de la base de datos solo si no tiene mascotas asignadas."""
-    veterinario = obtener_veterinario_por_rut(db, rut)
-    if not veterinario:
-        return None
-    if veterinario.mascotas:
-        print("No se puede eliminar el veterinario porque tiene mascotas asignadas.")
-        return None
-    try:
-        db.delete(veterinario)
+# ---------------------
+# CRUD Admin
+# ---------------------
+def crear_admin(db: Session, datos: dict):
+    admin = Admin(**datos)
+    db.add(admin)
+    db.commit()
+    db.refresh(admin)
+    return admin
+
+def obtener_admin(db: Session, id_admin: int):
+    return db.query(Admin).filter_by(id_admin=id_admin).first()
+
+def obtener_admin_por_rut(db: Session, rut: str):
+    return db.query(Admin).filter(Admin.rut == rut).first()
+
+
+def actualizar_admin(db: Session, id_admin: int, nuevos_datos: dict):
+    admin = obtener_admin(db, id_admin)
+    if admin:
+        for k, v in nuevos_datos.items():
+            setattr(admin, k, v)
         db.commit()
-        return veterinario
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al eliminar veterinario: {e}")
-        return None
+        db.refresh(admin)
+    return admin
 
-# ---------------------- CRUD Mascota ----------------------
-
-def crear_mascota(db: Session, chapa: str, nombre: str, raza: str, sexo: str, dieta: str, caracter: str, habitat: str, edad: int, peso: str, altura: str, rut_veterinario: str = None):
-    """Crea una nueva mascota en la base de datos solo si el veterinario existe."""
-    if rut_veterinario:
-        veterinario = obtener_veterinario_por_rut(db, rut_veterinario)
-        if not veterinario:
-            print("Error: El veterinario no existe.")
-            return None
-    try:
-        nueva_mascota = Mascota(
-            chapa=chapa,
-            nombre=nombre,
-            raza=raza,
-            sexo=sexo,
-            dieta=dieta,
-            caracter=caracter,
-            habitat=habitat,
-            edad=edad,
-            peso=peso,
-            altura=altura,
-            rut_veterinario=rut_veterinario
-        )
-        db.add(nueva_mascota)
+def eliminar_admin(db: Session, id_admin: int):
+    admin = obtener_admin(db, id_admin)
+    if admin:
+        db.delete(admin)
         db.commit()
-        db.refresh(nueva_mascota)
-        return nueva_mascota
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al crear mascota: {e}")
-        return None
+    return admin
 
-def obtener_mascotas(db: Session):
-    """Obtiene todas las mascotas registradas."""
-    return db.query(Mascota).all()
+# ---------------------
+# CRUD Recepcionista
+# ---------------------
+def crear_recepcionista(db: Session, datos: dict):
+    recep = Recepcionista(**datos)
+    db.add(recep)
+    db.commit()
+    db.refresh(recep)
+    return recep
 
-def obtener_mascota_por_chapa(db: Session, chapa: str):
-    """Obtiene una mascota por su chapa."""
-    return db.query(Mascota).filter(Mascota.chapa == chapa).first()
+def obtener_recepcionista(db: Session, id_recepcionista: int):
+    return db.query(Recepcionista).filter_by(id_recepcionista=id_recepcionista).first()
 
-def actualizar_mascota(db: Session, chapa: str, nombre: str = None, raza: str = None, sexo: str = None, dieta: str = None, caracter: str = None, habitat: str = None, edad: int = None, peso: str = None, altura: str = None, rut_veterinario: str = None):
-    """Actualiza los datos de una mascota."""
-    mascota = obtener_mascota_por_chapa(db, chapa)
-    if not mascota:
-        return None
-    if rut_veterinario:
-        veterinario = obtener_veterinario_por_rut(db, rut_veterinario)
-        if not veterinario:
-            print("Error: El veterinario no existe.")
-            return None
-    try:
-        if nombre:
-            mascota.nombre = nombre
-        if raza:
-            mascota.raza = raza
-        if sexo:
-            mascota.sexo = sexo
-        if dieta:
-            mascota.dieta = dieta
-        if caracter:
-            mascota.caracter = caracter
-        if habitat:
-            mascota.habitat = habitat
-        if edad:
-            mascota.edad = edad
-        if peso:
-            mascota.peso = peso
-        if altura:
-            mascota.altura = altura
-        if rut_veterinario:
-            mascota.rut_veterinario = rut_veterinario
+def obtener_recepcionista_por_rut(db, rut: str):
+    return db.query(Recepcionista).filter(Recepcionista.rut == rut).first()
+
+
+def actualizar_recepcionista(db: Session, id_recepcionista: int, nuevos_datos: dict):
+    recep = obtener_recepcionista(db, id_recepcionista)
+    if recep:
+        for k, v in nuevos_datos.items():
+            setattr(recep, k, v)
+        db.commit()
+        db.refresh(recep)
+    return recep
+
+def eliminar_recepcionista(db: Session, id_recepcionista: int):
+    recep = obtener_recepcionista(db, id_recepcionista)
+    if recep:
+        db.delete(recep)
+        db.commit()
+    return recep
+
+# ---------------------
+# CRUD Cliente
+# ---------------------
+def crear_cliente(db: Session, datos: dict):
+    cliente = Cliente(**datos)
+    db.add(cliente)
+    db.commit()
+    db.refresh(cliente)
+    return cliente
+
+def obtener_cliente(db: Session, id_cliente: int):
+    return db.query(Cliente).filter_by(id_cliente=id_cliente).first()
+
+def actualizar_cliente(db: Session, id_cliente: int, nuevos_datos: dict):
+    cliente = obtener_cliente(db, id_cliente)
+    if cliente:
+        for k, v in nuevos_datos.items():
+            setattr(cliente, k, v)
+        db.commit()
+        db.refresh(cliente)
+    return cliente
+
+def eliminar_cliente(db: Session, id_cliente: int):
+    cliente = obtener_cliente(db, id_cliente)
+    if cliente:
+        db.delete(cliente)
+        db.commit()
+    return cliente
+
+# ---------------------
+# CRUD Veterinario
+# ---------------------
+def crear_veterinario(db: Session, datos: dict):
+    vet = Veterinario(**datos)
+    db.add(vet)
+    db.commit()
+    db.refresh(vet)
+    return vet
+
+def obtener_veterinario(db: Session, id_vet: int):
+    return db.query(Veterinario).filter_by(id_vet=id_vet).first()
+
+def obtener_veterinario_por_rut(db, rut: str):
+    return db.query(Veterinario).filter(Veterinario.rut == rut).first()
+
+def actualizar_veterinario(db: Session, id_vet: int, nuevos_datos: dict):
+    vet = obtener_veterinario(db, id_vet)
+    if vet:
+        for k, v in nuevos_datos.items():
+            setattr(vet, k, v)
+        db.commit()
+        db.refresh(vet)
+    return vet
+
+def eliminar_veterinario(db: Session, id_vet: int):
+    vet = obtener_veterinario(db, id_vet)
+    if vet:
+        db.delete(vet)
+        db.commit()
+    return vet
+
+# ---------------------
+# CRUD Mascota
+# ---------------------
+def crear_mascota(db: Session, datos: dict):
+    mascota = Mascota(**datos)
+    db.add(mascota)
+    db.commit()
+    db.refresh(mascota)
+    return mascota
+
+def obtener_mascota(db: Session, id_mascota: int):
+    return db.query(Mascota).filter_by(id_mascota=id_mascota).first()
+
+def obtener_mascota_por_nombre(db: Session, nombre: str):
+    return db.query(Mascota).filter(Mascota.nombre == nombre).first()
+
+
+def actualizar_mascota(db: Session, id_mascota: int, nuevos_datos: dict):
+    mascota = obtener_mascota(db, id_mascota)
+    if mascota:
+        for k, v in nuevos_datos.items():
+            setattr(mascota, k, v)
         db.commit()
         db.refresh(mascota)
-        return mascota
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al actualizar mascota: {e}")
-        return None
+    return mascota
 
-def eliminar_mascota(db: Session, chapa: str):
-    """Elimina una mascota de la base de datos."""
-    mascota = obtener_mascota_por_chapa(db, chapa)
-    if not mascota:
-        return None
-    try:
+def obtener_mascotas_por_id(db: Session, id_mascota: int):
+    return db.query(Mascota).filter_by(id_mascota=id_mascota).first()
+
+
+def eliminar_mascota(db: Session, id_mascota: int):
+    mascota = obtener_mascota(db, id_mascota)
+    if mascota:
         db.delete(mascota)
         db.commit()
-        return mascota
-    except SQLAlchemyError as e:
-        db.rollback()
-        print(f"Error al eliminar mascota: {e}")
-        return None
+    return mascota
+
+# ---------------------
+# CRUD Consulta
+# ---------------------
+def crear_consulta(db: Session, datos: dict):
+    consulta = Consulta(**datos)
+    db.add(consulta)
+    db.commit()
+    db.refresh(consulta)
+    return consulta
+
+def obtener_consulta(db: Session, id_consulta: int):
+    return db.query(Consulta).filter_by(id_consulta=id_consulta).first()
+
+def actualizar_consulta(db: Session, id_consulta: int, nuevos_datos: dict):
+    consulta = obtener_consulta(db, id_consulta)
+    if consulta:
+        for k, v in nuevos_datos.items():
+            setattr(consulta, k, v)
+        db.commit()
+        db.refresh(consulta)
+    return consulta
+
+def eliminar_consulta(db: Session, id_consulta: int):
+    consulta = obtener_consulta(db, id_consulta)
+    if consulta:
+        db.delete(consulta)
+        db.commit()
+    return consulta

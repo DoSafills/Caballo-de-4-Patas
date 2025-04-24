@@ -1,65 +1,94 @@
-import logging
-from database import init_db, SessionLocal
+
+from sqlalchemy.orm import Session
+from database import SessionLocal, inicializar_base
 import crud
+from datetime import datetime
 
-# Configuración del logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+# Inicializar base de datos y sesión
+inicializar_base()
+db: Session = SessionLocal()
 
-def main():
-    # Inicializar la base de datos
-    init_db()
+# Crear un cliente
+cliente_data = {
+    "rut": "12345678-9",
+    "nombre": "Camila",
+    "apellido": "López",
+    "edad": 30,
+    "email": "camila@example.com",
+    "tipo": "cliente",
+    "id_cliente": 1,
+    "id_mascota": None
+}
+cliente = crud.crear_cliente(db, cliente_data)
 
-    # Crear una sesión de base de datos
-    db = SessionLocal()
+# Crear un veterinario
+veterinario_data = {
+    "rut": "11223344-5",
+    "nombre": "Dr. Ramírez",
+    "apellido": "Pérez",
+    "edad": 45,
+    "email": "dr.ramirez@example.com",
+    "tipo": "veterinario",
+    "id_vet": 1,
+    "especializacion": "Cirugía",
+    "contrasena": "segura123"
+}
+veterinario = crud.crear_veterinario(db, veterinario_data)
 
-    try:
-        # Insertar un veterinario de prueba
-        logging.info("Insertando veterinario de prueba...")
-        vet = crud.crear_veterinario(db, "12345678-9", "Juan", "Pérez", 40, "Cirugía", "contraseña")
-        if vet:
-            logging.info(f"Veterinario creado: {vet.nombre} {vet.apellido}")
-        else:
-            logging.error("Error al crear el veterinario.")
+# Crear una mascota
+mascota_data = {
+    "nombre": "Luna",
+    "raza": "Golden Retriever",
+    "sexo": "Hembra",
+    "dieta": "Especial",
+    "caracter": "Activa",
+    "habitat": "Casa",
+    "id_vet": veterinario.id_vet,
+    "edad": 5,
+    "peso": "30kg",
+    "altura": "60cm"
+}
+mascota = crud.crear_mascota(db, mascota_data)
 
-        # Insertar una mascota asociada al veterinario
-        logging.info("Insertando mascota de prueba...")
-        mascota = crud.crear_mascota(db, "CHP001", "Firulais", "Labrador", "Macho", "Carnívora", "Amigable", "Casa", 5, "25kg", "60cm", "12345678-9")
-        if mascota:
-            vet_name = mascota.veterinario.nombre if mascota.veterinario else "Veterinario no asignado"
-            logging.info(f"Mascota creada: {mascota.nombre}, atendida por {vet_name}")
-        else:
-            logging.error("Error al crear la mascota.")
+# Asignar mascota al cliente
+crud.actualizar_cliente(db, cliente.id_cliente, {"id_mascota": mascota.id_mascota})
 
-        # Obtener y mostrar todos los veterinarios
-        veterinarios = crud.obtener_veterinarios(db)
-        logging.info(f"Veterinarios registrados: {[v.nombre for v in veterinarios]}")
+# Crear un recepcionista
+recepcionista_data = {
+    "rut": "55667788-0",
+    "nombre": "Andrés",
+    "apellido": "Martínez",
+    "edad": 28,
+    "email": "andres@example.com",
+    "tipo": "recepcionista",
+    "id_recepcionista": 1,
+    "contrasena": "clave123"
+}
+recepcionista = crud.crear_recepcionista(db, recepcionista_data)
 
-        # Obtener y mostrar todas las mascotas
-        mascotas = crud.obtener_mascotas(db)
-        logging.info(f"Mascotas registradas: {[m.nombre for m in mascotas]}")
+# Crear una consulta
+consulta_data = {
+    "fecha_hora": datetime.now(),
+    "id_recepcionista": recepcionista.id_recepcionista,
+    "id_mascota": mascota.id_mascota,
+    "id_vet": veterinario.id_vet,
+    "id_cliente": cliente.id_cliente,
+    "motivo": "Revisión anual"
+}
+consulta = crud.crear_consulta(db, consulta_data)
 
-        # Actualizar un veterinario
-        logging.info("Actualizando especialización del veterinario...")
-        vet_actualizado = crud.actualizar_veterinario(db, "12345678-9", especializacion="Oncología")
-        if vet_actualizado:
-            logging.info(f"Veterinario actualizado: {vet_actualizado.nombre}, nueva especialización: {vet_actualizado.especializacion}")
-        else:
-            logging.error("Error al actualizar el veterinario.")
+# Crear un cliente
+admin_data = {
+    "rut": "22334455-6",
+    "nombre": "Pepe",
+    "apellido": "Tapia",
+    "edad": 30,
+    "email": "ptapia@example.com",
+    "tipo": "admin",
+    "id_admin": 1,
+    "contrasena": "clave123"
+}
+admin = crud.crear_admin(db, admin_data)
 
-        # Eliminar una mascota
-        logging.info("Eliminando una mascota...")
-        if crud.eliminar_mascota(db, "CHP001"):
-            logging.info("Mascota eliminada correctamente.")
-        else:
-            logging.error("Error al eliminar la mascota.")
 
-    except Exception as e:
-        logging.error(f"Error inesperado: {e}")
-
-    finally:
-        # Cerrar sesión de la base de datos
-        db.close()
-        logging.info("Conexión a la base de datos cerrada.")
-
-if __name__ == "__main__":
-    main()
+print(f"Consulta creada para {mascota.nombre} con el Dr. {veterinario.nombre} registrada por {recepcionista.nombre}")

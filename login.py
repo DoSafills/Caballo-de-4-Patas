@@ -1,21 +1,23 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
-from crud import obtener_veterinario_por_rut
+from crud import obtener_veterinario_por_rut, obtener_admin_por_rut, obtener_recepcionista_por_rut
 from Veterinaria import VeterinariaApp
+from Recepcionista import RecepcionistaApp
+from Admin import AdminApp
 
 class LoginApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Login Veterinario")
-        self.root.geometry("400x300")
+        self.root.title("Login Usuario")
+        self.root.geometry("400x350")
 
-        ctk.CTkLabel(root, text="RUT Veterinario:").pack(pady=10)
-        self.rut_entry = ctk.CTkEntry(root)
+        ctk.CTkLabel(root, text="RUT Usuario:", font=ctk.CTkFont(size=14)).pack(pady=10)
+        self.rut_entry = ctk.CTkEntry(root, width=250)
         self.rut_entry.pack()
 
-        ctk.CTkLabel(root, text="Contraseña:").pack(pady=10)
-        self.pass_entry = ctk.CTkEntry(root, show="*")
+        ctk.CTkLabel(root, text="Contraseña:", font=ctk.CTkFont(size=14)).pack(pady=10)
+        self.pass_entry = ctk.CTkEntry(root, show="*", width=250)
         self.pass_entry.pack()
 
         ctk.CTkButton(root, text="Iniciar Sesión", command=self.login).pack(pady=20)
@@ -25,18 +27,42 @@ class LoginApp:
         contrasena = self.pass_entry.get()
 
         db = SessionLocal()
-        veterinario = obtener_veterinario_por_rut(db, rut)
+        try:
+            # Verificar si es Admin
+            admin = obtener_admin_por_rut(db, rut)
+            if admin and admin.contrasena == contrasena:
+                messagebox.showinfo("Éxito", "Bienvenido Administrador")
+                self.root.destroy()
+                main_window = ctk.CTk()
+                AdminApp(main_window)
+                main_window.mainloop()
+                return
 
-        if veterinario and veterinario.contrasena == contrasena:
-            messagebox.showinfo("Éxito", f"Bienvenido {veterinario.nombre}")
-            self.root.destroy()  # cerrar login
-            main_window = ctk.CTk()  # crear ventana principal
-            app = VeterinariaApp(main_window)
-            main_window.mainloop()
-        else:
-            messagebox.showerror("Error", "rut o contraseña incorrectos")
+            # Verificar si es Veterinario
+            veterinario = obtener_veterinario_por_rut(db, rut)
+            if veterinario and veterinario.contrasena == contrasena:
+                messagebox.showinfo("Éxito", f"Bienvenido {veterinario.nombre}")
+                self.root.destroy()
+                main_window = ctk.CTk()
+                VeterinariaApp(main_window)
+                main_window.mainloop()
+                return
 
-        db.close()
+            # Verificar si es Recepcionista
+            recepcionista = obtener_recepcionista_por_rut(db, rut)
+            if recepcionista and recepcionista.contrasena == contrasena:
+                messagebox.showinfo("Éxito", "Bienvenido Recepcionista")
+                self.root.destroy()
+                main_window = ctk.CTk()
+                RecepcionistaApp(main_window)
+                main_window.mainloop()
+                return
+
+            # Si no coincide con ningún usuario
+            messagebox.showerror("Error", "RUT o contraseña incorrectos")
+
+        finally:
+            db.close()
 
 if __name__ == "__main__":
     root = ctk.CTk()
