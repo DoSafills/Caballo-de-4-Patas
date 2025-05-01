@@ -18,7 +18,7 @@ class VeterinariaApp:
         self.label.pack(pady=12, padx=10)
 
         self.entries = {}
-        for campo in ['nombre', 'chapa', 'edad', 'peso', 'altura']:
+        for campo in ['nombre', 'id_mascota', 'edad', 'peso', 'altura']:
             label = ctk.CTkLabel(master=self.frame, text=campo.capitalize())
             label.pack()
             entry = ctk.CTkEntry(master=self.frame)
@@ -47,20 +47,20 @@ class VeterinariaApp:
             return
 
         try:
-            crear_mascota(self.db, datos['nombre'], datos['chapa'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
+            crear_mascota(self.db, datos['nombre'], datos['id_mascota'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
             messagebox.showinfo("Éxito", "Mascota registrada")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
     def buscar_mascota(self):
-        chapa = self.entries['chapa'].get()
+        id_mascota = self.entries['id_mascota'].get()
         nombre = self.entries['nombre'].get()
 
-        if chapa:
-            mascota = obtener_mascotas_por_id(self.db, chapa)
+        if id_mascota:
+            mascota = obtener_mascotas_por_id(self.db, id_mascota)
             if mascota:
                 self.text_resultados.delete("1.0", "end")
-                self.text_resultados.insert("end", f"Nombre: {mascota.nombre}\nChapa: {mascota.id_mascota}\nEdad: {mascota.edad }\nPeso: {mascota.peso}\nAltura: {mascota.altura}\n")
+                self.text_resultados.insert("end", f"Nombre: {mascota.nombre}\nid_mascota: {mascota.id_mascota}\nEdad: {mascota.edad }\nPeso: {mascota.peso}\nAltura: {mascota.altura}\n")
             else:
                 messagebox.showinfo("Sin resultados", "No se encontró la mascota")
         elif nombre:
@@ -68,11 +68,11 @@ class VeterinariaApp:
             if mascotas:
                 self.text_resultados.delete("1.0", "end")
                 for mascota in mascotas:
-                    self.text_resultados.insert("end", f"{mascota.nombre} - {mascota.chapa}\n")
+                    self.text_resultados.insert("end", f"{mascota.nombre} - {mascota.id_mascota}\n")
             else:
                 messagebox.showinfo("Sin resultados", "No se encontraron mascotas con ese nombre")
         else:
-            messagebox.showinfo("Advertencia", "Ingrese al menos el nombre o la chapa")
+            messagebox.showinfo("Advertencia", "Ingrese al menos el nombre o la id_mascota")
 
     def actualizar_mascota(self):
         datos = {campo: self.entries[campo].get() for campo in self.entries}
@@ -81,7 +81,7 @@ class VeterinariaApp:
             return
 
         try:
-            mascota = actualizar_mascota(self.db, datos['chapa'], datos['nombre'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
+            mascota = actualizar_mascota(self.db, datos['id_mascota'], datos['nombre'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
             if mascota:
                 messagebox.showinfo("Éxito", "Mascota actualizada")
             else:
@@ -90,13 +90,13 @@ class VeterinariaApp:
             messagebox.showerror("Error", str(e))
 
     def eliminar_mascota(self):
-        chapa = self.entries['chapa'].get()
-        if not chapa:
-            messagebox.showerror("Error", "Ingrese la chapa de la mascota a eliminar")
+        id_mascota = self.entries['id_mascota'].get()
+        if not id_mascota:
+            messagebox.showerror("Error", "Ingrese la id_mascota de la mascota a eliminar")
             return
 
         try:
-            exito = eliminar_mascota(self.db, chapa)
+            exito = eliminar_mascota(self.db, id_mascota)
             if exito:
                 messagebox.showinfo("Éxito", "Mascota eliminada")
             else:
