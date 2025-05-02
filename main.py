@@ -1,7 +1,7 @@
 
 from sqlalchemy.orm import Session
 from database import SessionLocal, inicializar_base
-import crud
+import CRUD
 from datetime import datetime
 
 # Inicializar base de datos y sesión
