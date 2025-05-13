@@ -20,9 +20,8 @@ class Usuario(Base):
 
 class Admin(Usuario):
     __tablename__ = 'admin'
-    id_admin = Column(Integer, primary_key=True)
     contrasena = Column(String(50))
-    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'admin',
@@ -32,7 +31,7 @@ class Recepcionista(Usuario):
     __tablename__ = 'recepcionista'
     id_recepcionista = Column(Integer, primary_key=True)
     contrasena = Column(String(50))
-    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'recepcionista',
@@ -42,7 +41,7 @@ class Cliente(Usuario):
     __tablename__ = 'cliente'
     id_cliente = Column(Integer, primary_key=True)
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
-    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
     mascota = relationship("Mascota")
 
@@ -55,7 +54,7 @@ class Veterinario(Usuario):
     id_vet = Column(Integer, primary_key=True)
     especializacion = Column(String(255))
     contrasena = Column(String(255))
-    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'veterinario',

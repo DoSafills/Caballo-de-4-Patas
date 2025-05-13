@@ -1,16 +1,14 @@
 from sqlalchemy.orm import Session
-from models import Admin,Cliente,Consulta,Mascota,Persona,Recepcionista,Veterinario
+from models import Admin, Cliente, Consulta, Mascota, Usuario, Recepcionista, Veterinario
 
 #CRUD ADMIN
 
 def crear_admin(db, admin_data):
-    from models import Admin  # Asegúrate que el modelo esté importado
     nuevo_admin = Admin(**admin_data)
     db.add(nuevo_admin)
     db.commit()
     db.refresh(nuevo_admin)
     return nuevo_admin
-
 
 def crear_admin_NE(db: Session, datos: dict):
     existente = obtener_admin_por_rut(db, datos["rut"])
@@ -22,13 +20,11 @@ def crear_admin_NE(db: Session, datos: dict):
     db.refresh(admin)
     return admin
 
-
 def obtener_admin(db: Session, id_admin: int):
     return db.query(Admin).filter_by(id_admin=id_admin).first()
 
 def obtener_admin_por_rut(db: Session, rut: str):
     return db.query(Admin).filter(Admin.rut == rut).first()
-
 
 def actualizar_admin(db: Session, id_admin: int, nuevos_datos: dict):
     admin = obtener_admin(db, id_admin)
@@ -47,7 +43,6 @@ def eliminar_admin(db: Session, id_admin: int):
     return admin
 
 def eliminar_admin_por_rut(db, rut):
-    from models import Admin
     admin = db.query(Admin).filter_by(rut=rut).first()
     if admin:
         db.delete(admin)
@@ -158,48 +153,9 @@ def eliminar_mascota(db: Session, id_mascota: int):
         db.commit()
     return mascota
 
-
-#CRUD PERSONA
-
-
-from sqlalchemy.orm import Session
-from models import Persona
-
-def crear_persona(db: Session, datos: dict):
-    existente = obtener_persona(db, datos["rut"])
-    if existente:
-        return existente
-    persona = Persona(**datos)
-    db.add(persona)
-    db.commit()
-    db.refresh(persona)
-    return persona
-
-
-def obtener_persona(db: Session, rut: str):
-    return db.query(Persona).filter_by(rut=rut).first()
-
-def actualizar_persona(db: Session, rut: str, nuevos_datos: dict):
-    persona = obtener_persona(db, rut)
-    if persona:
-        for k, v in nuevos_datos.items():
-            setattr(persona, k, v)
-        db.commit()
-        db.refresh(persona)
-    return persona
-
-def eliminar_persona(db: Session, rut: str):
-    persona = obtener_persona(db, rut)
-    if persona:
-        db.delete(persona)
-        db.commit()
-    return persona
-
-
 #CRUD RECEPCIONISTA
 
 def crear_recepcionista(db, recepcionista_data):
-    from models import Recepcionista
     nuevo_recepcionista = Recepcionista(**recepcionista_data)
     db.add(nuevo_recepcionista)
     db.commit()
@@ -241,7 +197,6 @@ def eliminar_recepcionista(db: Session, id_recepcionista: int):
     return recep
 
 def eliminar_recepcionista_por_rut(db, rut):
-    from models import Recepcionista
     recep = db.query(Recepcionista).filter_by(rut=rut).first()
     if recep:
         db.delete(recep)
@@ -253,7 +208,6 @@ def eliminar_recepcionista_por_rut(db, rut):
 #CRUD VETERINARIO
 
 def crear_veterinario(db, vet_data):
-    from models import Veterinario
     nuevo_vet = Veterinario(**vet_data)
     db.add(nuevo_vet)
     db.commit()
@@ -294,7 +248,6 @@ def eliminar_veterinario(db: Session, id_vet: int):
     return vet
 
 def eliminar_veterinario_por_rut(db, rut):
-    from models import Veterinario
     vet = db.query(Veterinario).filter_by(rut=rut).first()
     if vet:
         db.delete(vet)
