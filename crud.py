@@ -255,3 +255,6 @@ def eliminar_veterinario_por_rut(db, rut):
         return True
     return False
 
+#obtiene datos de los usuarios
+def obtener_todos_los_usuarios(db):
+    return db.query(Usuario).all()
