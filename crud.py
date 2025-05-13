@@ -50,6 +50,38 @@ def eliminar_admin_por_rut(db, rut):
         return True
     return False
 
+#CRUD USUARIO
+
+def crear_usuario(db: Session, datos: dict):
+    existente = obtener_usuario(db, datos["rut"])
+    if existente:
+        return existente
+    usuario = Usuario(**datos)
+    db.add(usuario)
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+
+def obtener_usuario(db: Session, rut: str):
+    return db.query(Usuario).filter_by(rut=rut).first()
+
+def actualizar_usuario(db: Session, rut: str, nuevos_datos: dict):
+    usuario = obtener_usuario(db, rut)
+    if usuario:
+        for k, v in nuevos_datos.items():
+            setattr(usuario, k, v)
+        db.commit()
+        db.refresh(usuario)
+    return usuario
+
+def eliminar_usuario(db: Session, rut: str):
+    usuario = obtener_usuario(db, rut)
+    if usuario:
+        db.delete(usuario)
+        db.commit()
+    return usuario
+
 #CRUD CLIENTE
 
 def crear_cliente(db: Session, datos: dict):
