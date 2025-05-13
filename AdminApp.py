@@ -2,13 +2,6 @@ import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
 from crud import crear_admin, eliminar_admin_por_rut,crear_veterinario, eliminar_veterinario_por_rut,crear_recepcionista, eliminar_recepcionista_por_rut
-from Persona import Persona
-
-class Admin(Persona):
-    def __init__(self, id_admin, contrasena, rut, nombre, apellido, edad, email, tipo):
-        super().__init__(rut, nombre, apellido, edad, email, tipo)
-        self.id_admin = id_admin
-        self.contrasena = contrasena
 
 class AdminApp:
     def __init__(self, root):

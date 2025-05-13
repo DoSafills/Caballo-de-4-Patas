@@ -1,4 +1,4 @@
-class Persona:
+class Usuario:
     def __init__(self, rut, nombre, apellido, edad, email, tipo):
         self.rut = rut
         self.nombre = nombre

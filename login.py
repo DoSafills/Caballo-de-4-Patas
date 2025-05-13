@@ -3,8 +3,8 @@ from tkinter import messagebox
 from database import SessionLocal
 from crud import obtener_veterinario_por_rut,obtener_admin_por_rut,obtener_recepcionista_por_rut
 from Veterinaria import VeterinariaApp
-from Recepcionista import RecepcionistaApp
-from Admin import AdminApp
+from RecepcionistaApp import RecepcionistaApp
+from AdminApp import AdminApp
 
 class LoginApp:
     def __init__(self, root):

@@ -4,8 +4,8 @@ from sqlalchemy.ext.declarative import declared_attr
 
 Base = declarative_base()
 
-class Persona(Base):
-    __tablename__ = 'persona'
+class Usuario(Base):
+    __tablename__ = 'usuario'
     rut = Column(String(50), primary_key=True)
     nombre = Column(String(50))
     apellido = Column(String(50))
@@ -14,35 +14,35 @@ class Persona(Base):
     tipo = Column(String(50))
 
     __mapper_args__ = {
-        'polymorphic_identity': 'persona',
+        'polymorphic_identity': 'usuario',
         'polymorphic_on': tipo
     }
 
-class Admin(Persona):
+class Admin(Usuario):
     __tablename__ = 'admin'
     id_admin = Column(Integer, primary_key=True)
     contrasena = Column(String(50))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'admin',
     }
 
-class Recepcionista(Persona):
+class Recepcionista(Usuario):
     __tablename__ = 'recepcionista'
     id_recepcionista = Column(Integer, primary_key=True)
     contrasena = Column(String(50))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'recepcionista',
     }
 
-class Cliente(Persona):
+class Cliente(Usuario):
     __tablename__ = 'cliente'
     id_cliente = Column(Integer, primary_key=True)
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
 
     mascota = relationship("Mascota")
 
@@ -50,12 +50,12 @@ class Cliente(Persona):
         'polymorphic_identity': 'cliente',
     }
 
-class Veterinario(Persona):
+class Veterinario(Usuario):
     __tablename__ = 'veterinario'
     id_vet = Column(Integer, primary_key=True)
     especializacion = Column(String(255))
     contrasena = Column(String(255))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    rut = Column(String(50), ForeignKey('usuario.rut'), unique=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'veterinario',
