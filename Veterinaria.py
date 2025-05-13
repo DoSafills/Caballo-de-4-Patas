@@ -1,4 +1,7 @@
 import customtkinter as ctk
+from tkinter import messagebox
+from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
+from database import SessionLocal
 
 class VeterinariaApp:
     def __init__(self, root):
@@ -105,4 +108,5 @@ class VeterinariaApp:
 if __name__ == "__main__":
     root = ctk.CTk()
     app = VeterinariaApp(root)
+    root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
     root.mainloop()
