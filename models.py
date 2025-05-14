@@ -76,9 +76,9 @@ class Mascota(Base):
 
     veterinario = relationship("Veterinario")
 
-class Consulta(Base):
-    __tablename__ = 'consulta'
-    id_consulta = Column(Integer, primary_key=True)
+class Cita(Base):
+    __tablename__ = 'cita'
+    id_cita = Column(Integer, primary_key=True)
     fecha_hora = Column(DateTime)
     id_recepcionista = Column(Integer, ForeignKey('recepcionista.id_recepcionista'))
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))

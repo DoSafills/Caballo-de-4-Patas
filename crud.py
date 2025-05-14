@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Admin, Cliente, Consulta, Mascota, Usuario, Recepcionista, Veterinario
+from models import Admin, Cliente, Cita, Mascota, Usuario, Recepcionista, Veterinario
 
 #CRUD ADMIN
 
@@ -111,40 +111,40 @@ def eliminar_cliente(db: Session, id_cliente: int):
     return cliente
 
 
-#CRUD CONSULTA
+#CRUD CITA
 
-def crear_consulta(db: Session, datos: dict):
-    consulta_existente = db.query(Consulta).filter_by(
+def crear_cita(db: Session, datos: dict):
+    cita_existente = db.query(Cita).filter_by(
         fecha_hora=datos["fecha_hora"],
         id_mascota=datos["id_mascota"],
         id_vet=datos["id_vet"]
     ).first()
-    if consulta_existente:
-        return consulta_existente
-    consulta = Consulta(**datos)
-    db.add(consulta)
+    if cita_existente:
+        return cita_existente
+    cita = Cita(**datos)
+    db.add(cita)
     db.commit()
-    db.refresh(consulta)
-    return consulta
+    db.refresh(cita)
+    return cita
 
-def obtener_consulta(db: Session, id_consulta: int):
-    return db.query(Consulta).filter_by(id_consulta=id_consulta).first()
+def obtener_cita(db: Session, id_cita: int):
+    return db.query(Cita).filter_by(id_cita=id_cita).first()
 
-def actualizar_consulta(db: Session, id_consulta: int, nuevos_datos: dict):
-    consulta = obtener_consulta(db, id_consulta)
-    if consulta:
+def actualizar_cita(db: Session, id_cita: int, nuevos_datos: dict):
+    cita = obtener_cita(db, id_cita)
+    if cita:
         for k, v in nuevos_datos.items():
-            setattr(consulta, k, v)
+            setattr(cita, k, v)
         db.commit()
-        db.refresh(consulta)
-    return consulta
+        db.refresh(cita)
+    return cita
 
-def eliminar_consulta(db: Session, id_consulta: int):
-    consulta = obtener_consulta(db, id_consulta)
-    if consulta:
-        db.delete(consulta)
+def eliminar_cita(db: Session, id_cita: int):
+    cita = obtener_cita(db, id_cita)
+    if cita:
+        db.delete(cita)
         db.commit()
-    return consulta
+    return cita
 
 #CRUD MASCOTA
 
