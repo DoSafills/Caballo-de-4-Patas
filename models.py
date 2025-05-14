@@ -11,11 +11,11 @@ class Usuario(Base):
     apellido = Column(String(50))
     edad = Column(Integer)
     email = Column(String(50))
-    tipo = Column(String(50))
+    rol = Column(String(50))
 
     __mapper_args__ = {
         'polymorphic_identity': 'usuario',
-        'polymorphic_on': tipo
+        'polymorphic_on': rol
     }
 
 class Admin(Usuario):
@@ -70,11 +70,13 @@ class Mascota(Base):
     caracter = Column(String(255))
     habitat = Column(String(255))
     id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
+    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
     edad = Column(Integer)
     peso = Column(String(255))
     altura = Column(String(255))
 
     veterinario = relationship("Veterinario")
+    cliente = relationship("Cliente")
 
 class Cita(Base):
     __tablename__ = 'cita'
