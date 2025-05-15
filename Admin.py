@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
-from CRUD import crear_admin, eliminar_admin_por_rut,crear_veterinario, eliminar_veterinario_por_rut,crear_recepcionista, eliminar_recepcionista_por_rut
+from crud import crear_admin, eliminar_admin_por_rut,crear_veterinario, eliminar_veterinario_por_rut,crear_recepcionista, eliminar_recepcionista_por_rut
 
 class AdminApp:
     def __init__(self, root):
