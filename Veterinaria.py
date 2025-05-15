@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
+#from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
 from database import SessionLocal
 
 class VeterinariaApp:
