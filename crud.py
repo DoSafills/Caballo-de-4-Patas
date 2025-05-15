@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Admin,Cliente,Consulta,Mascota,Persona,Recepcionista,Veterinario
+from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+
 MODELOS = {
     "admin": Admin,
     "cliente": Cliente,
@@ -8,7 +9,7 @@ MODELOS = {
     "veterinario": Veterinario
 }
 
-#CRUD adminapp
+# CRUD adminapp
 def obtener_usuarios_por_tipo(db: Session, tipo: str):
     if tipo == "todos":
         resultado = []
@@ -42,95 +43,55 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
         return usuario
     return None
 
-
-#CRUD ADMIN
-
-def crear_admin(session: Session, datos: dict):
-    persona = Persona(
-        rut=datos['rut'],
-        nombre=datos['nombre'],
-        apellido=datos['apellido'],
-        edad=datos['edad'],
-        email=datos['email'],
-        tipo='admin'
-    )
-    admin = Admin(
-        rut=datos['rut'],
-        contrasena=datos['contrasena']
-    )
-    session.add(persona)
-    session.add(admin)
-    session.commit()
-
 def crear_usuario(db, tipo, datos):
-    persona = Persona(
-        rut=datos["rut"],
-        nombre=datos["nombre"],
-        apellido=datos["apellido"],
-        edad=datos["edad"],
-        email=datos["email"],
-        tipo=tipo
-    )
-    db.add(persona)
-    db.commit()
+    try:
+        if tipo == "admin":
+            usuario = Admin(
+                rut=datos["rut"],
+                nombre=datos["nombre"],
+                apellido=datos["apellido"],
+                edad=datos["edad"],
+                email=datos["email"],
+                tipo="admin",
+                contrasena=datos["contrasena"]
+            )
+        elif tipo == "recepcionista":
+            usuario = Recepcionista(
+                rut=datos["rut"],
+                nombre=datos["nombre"],
+                apellido=datos["apellido"],
+                edad=datos["edad"],
+                email=datos["email"],
+                tipo="recepcionista",
+                contrasena=datos["contrasena"]
+            )
+        elif tipo == "veterinario":
+            usuario = Veterinario(
+                rut=datos["rut"],
+                nombre=datos["nombre"],
+                apellido=datos["apellido"],
+                edad=datos["edad"],
+                email=datos["email"],
+                tipo="veterinario",
+                contrasena=datos["contrasena"],
+                especializacion=datos["especializacion"]
+            )
+        else:
+            return False
 
-    if tipo == "admin":
-        usuario = Admin(rut=datos["rut"], contrasena=datos["contrasena"])
-    elif tipo == "recepcionista":
-        usuario = Recepcionista(rut=datos["rut"], contrasena=datos["contrasena"])
-    elif tipo == "veterinario":
-        usuario = Veterinario(rut=datos["rut"], especializacion=datos["especializacion"], contrasena=datos["contrasena"])
-    else:
+        db.add(usuario)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"error al crear usuario: {e}")
         return False
-
-    db.add(usuario)
-    db.commit()
-    return True
 
 def obtener_admin_por_rut(db, rut):
     return db.query(Admin).filter_by(rut=rut).first()
 
-#CRUD VETERINARIO
-
 def obtener_veterinario_por_rut(db, rut):
     return db.query(Veterinario).filter_by(rut=rut).first()
-
-
-def crear_veterinario(session: Session, datos: dict):
-    persona = Persona(
-        rut=datos['rut'],
-        nombre=datos['nombre'],
-        apellido=datos['apellido'],
-        edad=datos['edad'],
-        email=datos['email'],
-        tipo='veterinario'
-    )
-    veterinario = Veterinario(
-        rut=datos['rut'],
-        contrasena=datos['contrasena'],
-        especializacion=datos['especializacion']
-    )
-    session.add(persona)
-    session.add(veterinario)
-    session.commit()
-
-#CRUD RECEPCIONISTA
-def crear_recepcionista(session: Session, datos: dict):
-    persona = Persona(
-        rut=datos['rut'],
-        nombre=datos['nombre'],
-        apellido=datos['apellido'],
-        edad=datos['edad'],
-        email=datos['email'],
-        tipo='recepcionista'
-    )
-    recepcionista = Recepcionista(
-        rut=datos['rut'],
-        contrasena=datos['contrasena']
-    )
-    session.add(persona)
-    session.add(recepcionista)
-    session.commit()
 
 def obtener_recepcionista_por_rut(db, rut):
     return db.query(Recepcionista).filter_by(rut=rut).first()
