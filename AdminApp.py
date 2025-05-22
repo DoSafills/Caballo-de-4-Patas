@@ -1,101 +1,118 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from crud import obtener_usuarios_por_tipo, eliminar_usuario, actualizar_usuario, crear_usuario
 from database import SessionLocal
-from crud import crear_admin, eliminar_admin_por_rut,crear_veterinario, eliminar_veterinario_por_rut,crear_recepcionista, eliminar_recepcionista_por_rut
+from tkinter import messagebox
+from iterator import ColeccionUsuarios
 
-class AdminApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Panel Administrador")
-        self.root.geometry("800x500")
+class AdminApp(ctk.CTkFrame):
+    def __init__(self, master):
+        super().__init__(master)
+        self.db = SessionLocal()
+        self.pack(fill="both", expand=True)
 
-        ctk.CTkLabel(self.root, text="Administrador - Gestión de Usuarios", font=("Arial", 20)).pack(pady=20)
+        self.tipo_usuario = ctk.StringVar(value="todos")
+        self.tipo_crear = ctk.StringVar(value="admin")
 
-        self.rut_entry = ctk.CTkEntry(self.root, placeholder_text="RUT")
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # panel izquierdo
+        izquierda = ctk.CTkFrame(self)
+        izquierda.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+
+        self.selector_tipo = ctk.CTkOptionMenu(izquierda, values=["todos", "admin", "cliente", "mascota", "recepcionista", "veterinario"], variable=self.tipo_usuario, command=self.cargar_usuarios)
+        self.selector_tipo.pack(pady=5)
+
+        self.rut_entry = ctk.CTkEntry(izquierda, placeholder_text="rut del usuario")
         self.rut_entry.pack(pady=5)
 
-        self.nombre_entry = ctk.CTkEntry(self.root, placeholder_text="Nombre")
-        self.nombre_entry.pack(pady=5)
+        #self.nuevo_nombre = ctk.CTkEntry(izquierda, placeholder_text="nuevo nombre del usuario")
+        #self.nuevo_nombre.pack(pady=5)
 
-        self.apellido_entry = ctk.CTkEntry(self.root, placeholder_text="Apellido")
-        self.apellido_entry.pack(pady=5)
+        self.boton_actualizar = ctk.CTkButton(izquierda, text="actualizar", command=self.actualizar)
+        self.boton_actualizar.pack(pady=5)
 
-        self.edad_entry = ctk.CTkEntry(self.root, placeholder_text="Edad")
-        self.edad_entry.pack(pady=5)
+        self.boton_eliminar = ctk.CTkButton(izquierda, text="eliminar", command=self.eliminar)
+        self.boton_eliminar.pack(pady=5)
 
-        self.email_entry = ctk.CTkEntry(self.root, placeholder_text="Email")
-        self.email_entry.pack(pady=5)
+        # panel derecho
+        derecha = ctk.CTkFrame(self)
+        derecha.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
-        self.contrasena_entry = ctk.CTkEntry(self.root, placeholder_text="Contraseña", show="*")
-        self.contrasena_entry.pack(pady=5)
+        ctk.CTkLabel(derecha, text="crear nuevo usuario").pack(pady=5)
 
-        self.rol_combobox = ctk.CTkComboBox(self.root, values=["admin", "veterinario", "recepcionista"])
-        self.rol_combobox.pack(pady=10)
+        self.crear_tipo = ctk.CTkOptionMenu(derecha, values=["admin", "recepcionista", "veterinario"], variable=self.tipo_crear)
+        self.crear_tipo.pack(pady=5)
 
-        ctk.CTkButton(self.root, text="Crear Usuario", command=self.crear_usuario).pack(pady=5)
-        ctk.CTkButton(self.root, text="Eliminar Usuario", command=self.eliminar_usuario).pack(pady=5)
+        self.crear_entries = {}
+        for campo in ["rut", "nombre", "apellido", "edad", "email", "contrasena", "especializacion"]:
+            entry = ctk.CTkEntry(derecha, placeholder_text=campo)
+            entry.pack(pady=2)
+            self.crear_entries[campo] = entry
 
-    def crear_usuario(self):
-        db = SessionLocal()
+        self.boton_crear = ctk.CTkButton(derecha, text="crear usuario", command=self.crear)
+        self.boton_crear.pack(pady=5)
+
+        # tabla (vista de usuarios) con tamaño fijo
+        self.frame_tabla = ctk.CTkScrollableFrame(self, width=800, height=300)
+        self.frame_tabla.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+        self.frame_tabla.grid_columnconfigure((0, 1, 2), weight=1)
+
+        self.cargar_usuarios("todos")
+
+    def cargar_usuarios(self, tipo):
+        for widget in self.frame_tabla.winfo_children():
+            widget.destroy()
+
+        encabezados = ["tipo", "rut", "nombre"]
+        for i, texto in enumerate(encabezados):
+            ctk.CTkLabel(self.frame_tabla, text=texto.upper(), font=ctk.CTkFont(weight="bold")).grid(row=0, column=i, padx=5, pady=5)
+
+        usuarios = obtener_usuarios_por_tipo(self.db, tipo)
+        coleccion = ColeccionUsuarios(usuarios)
+
+        for fila, usuario in enumerate(coleccion, start=1):
+            ctk.CTkLabel(self.frame_tabla, text=usuario.__class__.__name__).grid(row=fila, column=0, padx=5, pady=2)
+            ctk.CTkLabel(self.frame_tabla, text=usuario.rut).grid(row=fila, column=1, padx=5, pady=2)
+            ctk.CTkLabel(self.frame_tabla, text=getattr(usuario, "nombre", "")).grid(row=fila, column=2, padx=5, pady=2)
+
+    def eliminar(self):
         rut = self.rut_entry.get()
-        nombre = self.nombre_entry.get()
-        apellido = self.apellido_entry.get()
-        edad = int(self.edad_entry.get())
-        email = self.email_entry.get()
-        contrasena = self.contrasena_entry.get()
-        rol = self.rol_combobox.get()
+        tipo = self.tipo_usuario.get()
+        if eliminar_usuario(self.db, rut, tipo):
+            messagebox.showinfo("exito", "usuario eliminado")
+            self.cargar_usuarios(tipo)
+        else:
+            messagebox.showerror("error", "no se pudo eliminar")
 
-        try:
-            if rol == "admin":
-                crear_admin(db, {
-                    "rut": rut, "nombre": nombre, "apellido": apellido, "edad": edad,
-                    "email": email, "tipo": "admin", "id_admin": None, "contrasena": contrasena
-                })
-            elif rol == "veterinario":
-                crear_veterinario(db, {
-                    "rut": rut, "nombre": nombre, "apellido": apellido, "edad": edad,
-                    "email": email, "tipo": "veterinario", "id_vet": None, "especializacion": "General",
-                    "contrasena": contrasena
-                })
-            elif rol == "recepcionista":
-                crear_recepcionista(db, {
-                    "rut": rut, "nombre": nombre, "apellido": apellido, "edad": edad,
-                    "email": email, "tipo": "recepcionista", "id_recepcionista": None,
-                    "contrasena": contrasena
-                })
-            else:
-                messagebox.showerror("Error", "Rol no válido.")
-                return
-
-            messagebox.showinfo("Éxito", f"{rol.capitalize()} creado correctamente.")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error: {e}")
-        finally:
-            db.close()
-
-    def eliminar_usuario(self):
-        db = SessionLocal()
+    def actualizar(self):
         rut = self.rut_entry.get()
-        rol = self.rol_combobox.get()
+        tipo = self.tipo_usuario.get()
+        nuevos_datos = {"nombre": "nuevo nombre"}
+        if actualizar_usuario(self.db, rut, tipo, nuevos_datos):
+            messagebox.showinfo("exito", "usuario actualizado")
+            self.cargar_usuarios(tipo)
+        else:
+            messagebox.showerror("error", "no se pudo actualizar")
 
-        try:
-            if rol == "admin":
-                exito = eliminar_admin_por_rut(db, rut)
-            elif rol == "veterinario":
-                exito = eliminar_veterinario_por_rut(db, rut)
-            elif rol == "recepcionista":
-                exito = eliminar_recepcionista_por_rut(db, rut)
-            else:
-                messagebox.showerror("Error", "Rol no válido.")
-                return
+    def crear(self):
+        tipo = self.tipo_crear.get()
+        datos = {}
+        for campo, entry in self.crear_entries.items():
+            valor = entry.get()
+            if campo == "edad":
+                try:
+                    valor = int(valor)
+                except:
+                    messagebox.showerror("error", "edad debe ser un numero")
+                    return
+            datos[campo] = valor
 
-            if exito:
-                messagebox.showinfo("Éxito", f"Usuario con RUT {rut} eliminado correctamente.")
-            else:
-                messagebox.showwarning("No encontrado", f"No se encontró usuario con RUT {rut}.")
+        if tipo != "veterinario":
+            datos.pop("especializacion", None)
 
-        except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error: {e}")
-        finally:
-            db.close()
+        if crear_usuario(self.db, tipo, datos):
+            messagebox.showinfo("exito", "usuario creado")
+            self.cargar_usuarios("todos")
+        else:
+            messagebox.showerror("error", "no se pudo crear")

@@ -1,4 +1,4 @@
-class Consulta:
+class Cita:
     def __init__(self, id_consulta, fecha_hora, id_recepcionista, id_mascota, id_vet, id_cliente, motivo):
         self.id_consulta = id_consulta
         self.fecha_hora = fecha_hora
