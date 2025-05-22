@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from models import Admin, Cliente, Cita, Mascota, Usuario, Recepcionista, Veterinario
 
 MODELOS = {
     "admin": Admin,
@@ -10,17 +10,17 @@ MODELOS = {
 }
 
 # CRUD adminapp
-def obtener_usuarios_por_tipo(db: Session, tipo: str):
-    if tipo == "todos":
+def obtener_usuarios_por_rol(db: Session, rol: str):
+    if rol == "todos":
         resultado = []
         for modelo in MODELOS.values():
             resultado.extend(db.query(modelo).all())
         return resultado
-    modelo = MODELOS.get(tipo)
+    modelo = MODELOS.get(rol)
     return db.query(modelo).all() if modelo else []
 
-def eliminar_usuario(db: Session, rut: str, tipo: str):
-    modelo = MODELOS.get(tipo)
+def eliminar_usuario(db: Session, rut: str, rol: str):
+    modelo = MODELOS.get(rol)
     if not modelo:
         return False
     usuario = db.query(modelo).filter_by(rut=rut).first()
@@ -30,8 +30,8 @@ def eliminar_usuario(db: Session, rut: str, tipo: str):
         return True
     return False
 
-def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
-    modelo = MODELOS.get(tipo)
+def actualizar_usuario(db: Session, rut: str, rol: str, nuevos_datos: dict):
+    modelo = MODELOS.get(rol)
     if not modelo:
         return None
     usuario = db.query(modelo).filter_by(rut=rut).first()
@@ -43,36 +43,36 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
         return usuario
     return None
 
-def crear_usuario(db, tipo, datos):
+def crear_usuario(db, rol, datos):
     try:
-        if tipo == "admin":
+        if rol == "admin":
             usuario = Admin(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                tipo="admin",
+                rol="admin",
                 contrasena=datos["contrasena"]
             )
-        elif tipo == "recepcionista":
+        elif rol == "recepcionista":
             usuario = Recepcionista(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                tipo="recepcionista",
+                rol="recepcionista",
                 contrasena=datos["contrasena"]
             )
-        elif tipo == "veterinario":
+        elif rol == "veterinario":
             usuario = Veterinario(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                tipo="veterinario",
+                rol="veterinario",
                 contrasena=datos["contrasena"],
                 especializacion=datos["especializacion"]
             )

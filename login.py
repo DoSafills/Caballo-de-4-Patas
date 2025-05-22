@@ -3,7 +3,7 @@ from tkinter import messagebox
 from database import SessionLocal
 from crud import obtener_veterinario_por_rut,obtener_admin_por_rut,obtener_recepcionista_por_rut
 from Veterinaria import VeterinariaApp
-from Recepcionista import RecepcionistaApp
+from RecepcionistaApp import RecepcionistaApp
 from adminApp import AdminApp
 
 class LoginApp:
