@@ -10,17 +10,17 @@ MODELOS = {
 }
 
 # CRUD adminapp
-def obtener_usuarios_por_rol(db: Session, rol: str):
-    if rol == "todos":
+def obtener_usuarios_por_tipo(db: Session, tipo: str):
+    if tipo == "todos":
         resultado = []
         for modelo in MODELOS.values():
             resultado.extend(db.query(modelo).all())
         return resultado
-    modelo = MODELOS.get(rol)
+    modelo = MODELOS.get(tipo)
     return db.query(modelo).all() if modelo else []
 
-def eliminar_usuario(db: Session, rut: str, rol: str):
-    modelo = MODELOS.get(rol)
+def eliminar_usuario(db: Session, rut: str, tipo: str):
+    modelo = MODELOS.get(tipo)
     if not modelo:
         return False
     usuario = db.query(modelo).filter_by(rut=rut).first()
@@ -30,8 +30,8 @@ def eliminar_usuario(db: Session, rut: str, rol: str):
         return True
     return False
 
-def actualizar_usuario(db: Session, rut: str, rol: str, nuevos_datos: dict):
-    modelo = MODELOS.get(rol)
+def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
+    modelo = MODELOS.get(tipo)
     if not modelo:
         return None
     usuario = db.query(modelo).filter_by(rut=rut).first()
@@ -43,36 +43,36 @@ def actualizar_usuario(db: Session, rut: str, rol: str, nuevos_datos: dict):
         return usuario
     return None
 
-def crear_usuario(db, rol, datos):
+def crear_usuario(db, tipo, datos):
     try:
-        if rol == "admin":
+        if tipo == "admin":
             usuario = Admin(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                rol="admin",
+                tipo="admin",
                 contrasena=datos["contrasena"]
             )
-        elif rol == "recepcionista":
+        elif tipo == "recepcionista":
             usuario = Recepcionista(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                rol="recepcionista",
+                tipo="recepcionista",
                 contrasena=datos["contrasena"]
             )
-        elif rol == "veterinario":
+        elif tipo == "veterinario":
             usuario = Veterinario(
                 rut=datos["rut"],
                 nombre=datos["nombre"],
                 apellido=datos["apellido"],
                 edad=datos["edad"],
                 email=datos["email"],
-                rol="veterinario",
+                tipo="veterinario",
                 contrasena=datos["contrasena"],
                 especializacion=datos["especializacion"]
             )
@@ -83,7 +83,7 @@ def crear_usuario(db, rol, datos):
         db.commit()
         return True
     except Exception as e:
-        db.rollback()
+        db.tipolback()
         print(f"error al crear usuario: {e}")
         return False
 

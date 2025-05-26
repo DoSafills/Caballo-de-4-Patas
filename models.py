@@ -33,6 +33,8 @@ class Recepcionista(Usuario):
     contrasena = Column(String(50))
     rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
+    citas = relationship("Cita", back_populates="recepcionista")
+
     __mapper_args__ = {
         'polymorphic_identity': 'recepcionista',
     }
@@ -43,7 +45,8 @@ class Cliente(Usuario):
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
     rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
 
-    mascota = relationship("Mascota")
+    mascotas = relationship("Mascota", back_populates="cliente")
+    citas = relationship("Cita", back_populates="cliente")
 
     __mapper_args__ = {
         'polymorphic_identity': 'cliente',
@@ -55,6 +58,9 @@ class Veterinario(Usuario):
     especializacion = Column(String(255))
     contrasena = Column(String(255))
     rut = Column(String(50), ForeignKey('usuario.rut'), primary_key=True)
+
+    mascotas = relationship("Mascota", back_populates="veterinario")
+    citas = relationship("Cita", back_populates="veterinario")
 
     __mapper_args__ = {
         'polymorphic_identity': 'veterinario',
@@ -75,8 +81,9 @@ class Mascota(Base):
     peso = Column(String(255))
     altura = Column(String(255))
 
-    veterinario = relationship("Veterinario")
-    cliente = relationship("Cliente")
+    veterinario = relationship("Veterinario", back_populates="mascotas")
+    cliente = relationship("Cliente", back_populates="mascotas")
+    citas = relationship("Cita", back_populates="mascota")
 
 class Cita(Base):
     __tablename__ = 'cita'
@@ -88,10 +95,10 @@ class Cita(Base):
     id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
     motivo = Column(String(255))
 
-    recepcionista = relationship("Recepcionista")
-    mascota = relationship("Mascota")
-    veterinario = relationship("Veterinario")
-    cliente = relationship("Cliente")
+    recepcionista = relationship("Recepcionista", back_populates="citas")
+    mascota = relationship("Mascota", back_populates="citas")
+    veterinario = relationship("Veterinario", back_populates="citas")
+    cliente = relationship("Cliente", back_populates="citas")
 
 def create_tables(engine):
     Base.metadata.create_all(engine)

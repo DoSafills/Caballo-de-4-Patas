@@ -4,7 +4,7 @@ from database import SessionLocal
 from crud import obtener_veterinario_por_rut, obtener_admin_por_rut, obtener_recepcionista_por_rut
 from Veterinaria import VeterinariaApp
 from RecepcionistaApp import GestionHorasApp as RecepcionistaApp
-from adminApp import AdminApp
+from AdminApp import AdminApp
 
 class LoginApp:
     def __init__(self, root):
