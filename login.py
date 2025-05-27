@@ -6,8 +6,8 @@ from strategyBusqueda import BusquedaPorRut
 from contextStrategy import ContextoBusqueda
 from models import Admin, Veterinario, Recepcionista
 from Veterinaria import VeterinariaApp
-from recepcionistaApp import GestionHorasApp as RecepcionistaApp
-from AdminApp import AdminApp
+from RecepcionistaApp import GestionHorasApp as RecepcionistaApp
+from adminApp import AdminApp
 
 class LoginApp:
     def __init__(self, root):
