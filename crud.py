@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Admin, Cliente, Cita, Mascota, Usuario, Recepcionista, Veterinario
+from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
 
 MODELOS = {
     "admin": Admin,
@@ -83,7 +83,7 @@ def crear_usuario(db, tipo, datos):
         db.commit()
         return True
     except Exception as e:
-        db.tipolback()
+        db.rollback()
         print(f"error al crear usuario: {e}")
         return False
 
