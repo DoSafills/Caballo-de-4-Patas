@@ -26,11 +26,23 @@ class AdminApp(ctk.CTkFrame):
         self.rut_entry = ctk.CTkEntry(izquierda, placeholder_text="rut del usuario")
         self.rut_entry.pack(pady=5)
 
-        self.boton_actualizar = ctk.CTkButton(izquierda, text="actualizar", command=self.actualizar)
-        self.boton_actualizar.pack(pady=5)
-
         self.boton_eliminar = ctk.CTkButton(izquierda, text="eliminar", command=self.eliminar)
         self.boton_eliminar.pack(pady=5)
+
+        # Editar
+
+        ctk.CTkLabel(izquierda, text="Editar datos").pack(pady=5)
+        self.editar_entries = {}
+        for campo in ["nombre", "apellido", "email"]:
+            entry = ctk.CTkEntry(izquierda, placeholder_text=campo)
+            entry.pack(pady=2)
+            self.editar_entries[campo] = entry
+
+        self.boton_cargar_datos = ctk.CTkButton(izquierda, text="cargar datos", command=self.cargar_datos_edit)
+        self.boton_cargar_datos.pack(pady=5)
+
+        self.boton_actualizar = ctk.CTkButton(izquierda, text="actualizar", command=self.actualizar)
+        self.boton_actualizar.pack(pady=5)
 
         # panel derecho
         derecha = ctk.CTkFrame(self)
@@ -57,6 +69,20 @@ class AdminApp(ctk.CTkFrame):
 
         self.cargar_usuarios("todos")
 
+    # Cargar datos para editar
+    def cargar_datos_edit(self):
+        rut = self.rut_entry.get()
+        tipo = self.tipo_usuario.get()
+        usuarios = obtener_usuarios_por_tipo(self.db, tipo)
+        for usuario in usuarios:
+            if usuario.rut == rut:
+                for campo in self.editar_entries:
+                    self.editar_entries[campo].delete(0, "end")
+                    self.editar_entries[campo].insert(0, getattr(usuario, campo, ""))
+                return
+        messagebox.showerror("error", "usuario no encontrado")
+
+    # para iterator
     def cargar_usuarios(self, tipo):
         for widget in self.frame_tabla.winfo_children():
             widget.destroy()
@@ -85,7 +111,12 @@ class AdminApp(ctk.CTkFrame):
     def actualizar(self):
         rut = self.rut_entry.get()
         tipo = self.tipo_usuario.get()
-        nuevos_datos = {"nombre": "nuevo nombre"}
+        nuevos_datos = {}
+        for campo, entry in self.editar_entries.items():
+            valor = entry.get()
+            if valor:
+                nuevos_datos[campo] = valor
+
         if actualizar_usuario(self.db, rut, tipo, nuevos_datos):
             messagebox.showinfo("exito", "usuario actualizado")
             self.cargar_usuarios(tipo)
