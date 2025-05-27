@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+import models
 
 MODELOS = {
     "admin": Admin,
@@ -97,43 +98,13 @@ def obtener_recepcionista_por_rut(db, rut):
     return db.query(Recepcionista).filter_by(rut=rut).first()
 
 
-def crear_mascota(db, datos):
+def crear_mascota(db, mascota_data):
     try:
-        mascota = Mascota(
-            nombre=datos["nombre"],
-            raza=datos.get("raza", "Desconocida"),
-            sexo=datos.get("sexo", "Desconocido"),
-            dieta=datos.get("dieta", "Normal"),
-            caracter=datos.get("caracter", "Tranquilo"),
-            habitat=datos.get("habitat", "Casa"),
-            id_vet=datos.get("id_vet"),
-            edad=datos["edad"],
-            peso=datos["peso"],
-            altura=datos["altura"]
-        )
-        db.add(mascota)
+        nueva_mascota = models.Mascota(**mascota_data)
+        db.add(nueva_mascota)
         db.commit()
-        db.refresh(mascota)
-        return mascota
-    except Exception as e:
-        db.rollback()
-        raise e
-
-def crear_cliente(db, datos):
-    try:
-        cliente = Cliente(
-            rut=datos["rut"],
-            nombre=datos["nombre"],
-            apellido=datos["apellido"],
-            edad=datos["edad"],
-            email=datos["email"],
-            tipo=datos["tipo"],
-            id_mascota=datos["id_mascota"]
-        )
-        db.add(cliente)
-        db.commit()
-        db.refresh(cliente)
-        return cliente
+        db.refresh(nueva_mascota)
+        return nueva_mascota
     except Exception as e:
         db.rollback()
         raise e

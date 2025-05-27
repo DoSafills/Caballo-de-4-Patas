@@ -1,11 +1,9 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
-from strategyBusqueda import BusquedaPorRut
-from contextStrategy import ContextoBusqueda
-from models import Admin, Veterinario, Recepcionista
+from crud import obtener_veterinario_por_rut,obtener_admin_por_rut,obtener_recepcionista_por_rut
 from Veterinaria import VeterinariaApp
-from recepcionistaApp import GestionHorasApp as RecepcionistaApp
+from RecepcionistaApp import GestionHorasApp as RecepcionistaApp
 from adminApp import AdminApp
 
 class LoginApp:
@@ -30,23 +28,6 @@ class LoginApp:
 
         db = SessionLocal()
         try:
-            estrategias = [
-                (Admin, AdminApp, "Administrador"),
-                (Veterinario, VeterinariaApp, "Veterinario"),
-                (Recepcionista, GestionHorasApp, "Recepcionista")
-            ]
-
-            for modelo, app_clase, rol in estrategias:
-                estrategia = ContextoBusqueda(BusquedaPorRut(modelo))
-                usuario = estrategia.buscar(db, rut)
-                if usuario and usuario.contrasena == contrasena:
-                    messagebox.showinfo("Éxito", f"Bienvenido {rol}")
-                    self.root.destroy()
-                    main_window = ctk.CTk()
-                    app_clase(main_window)
-                    main_window.mainloop()
-                    return
-
             # Verificar si es Admin
             admin = obtener_admin_por_rut(db, rut)
             if admin and admin.contrasena == contrasena:
