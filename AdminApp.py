@@ -100,13 +100,16 @@ class AdminApp(ctk.CTkFrame):
             ctk.CTkLabel(self.frame_tabla, text=getattr(usuario, "nombre", "")).grid(row=fila, column=2, padx=5, pady=2)
 
     def eliminar(self):
-        rut = self.rut_entry.get()
-        tipo = self.tipo_usuario.get()
+        rut = self.rut_entry.get().strip()
+        tipo = self.tipo_usuario.get().strip()
+
         if eliminar_usuario(self.db, rut, tipo):
             messagebox.showinfo("exito", "usuario eliminado")
+            self.rut_entry.delete(0, 'end')
             self.cargar_usuarios(tipo)
         else:
             messagebox.showerror("error", "no se pudo eliminar")
+
 
     def actualizar(self):
         rut = self.rut_entry.get()

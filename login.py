@@ -1,9 +1,11 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
-from crud import obtener_veterinario_por_rut,obtener_admin_por_rut,obtener_recepcionista_por_rut
+from strategyBusqueda import BusquedaPorRut
+from contextStrategy import ContextoBusqueda
+from models import Admin, Veterinario, Recepcionista
 from Veterinaria import VeterinariaApp
-from Recepcionista import GestionHorasApp as RecepcionistaApp
+from recepcionistaApp import GestionHorasApp as RecepcionistaApp
 from AdminApp import AdminApp
 
 class LoginApp:
@@ -28,37 +30,23 @@ class LoginApp:
 
         db = SessionLocal()
         try:
-            # Verificar si es Admin
-            admin = obtener_admin_por_rut(db, rut)
-            if admin and admin.contrasena == contrasena:
-                messagebox.showinfo("Éxito", "Bienvenido Administrador")
-                self.root.destroy()
-                main_window = ctk.CTk()
-                AdminApp(main_window)
-                main_window.mainloop()
-                return
+            estrategias = [
+                (Admin, AdminApp, "Administrador"),
+                (Veterinario, VeterinariaApp, "Veterinario"),
+                (Recepcionista, GestionHorasApp, "Recepcionista")
+            ]
 
-            # Verificar si es Veterinario
-            veterinario = obtener_veterinario_por_rut(db, rut)
-            if veterinario and veterinario.contrasena == contrasena:
-                messagebox.showinfo("Éxito", f"Bienvenido {veterinario.nombre}")
-                self.root.destroy()
-                main_window = ctk.CTk()
-                VeterinariaApp(main_window)
-                main_window.mainloop()
-                return
+            for modelo, app_clase, rol in estrategias:
+                estrategia = ContextoBusqueda(BusquedaPorRut(modelo))
+                usuario = estrategia.buscar(db, rut)
+                if usuario and usuario.contrasena == contrasena:
+                    messagebox.showinfo("Éxito", f"Bienvenido {rol}")
+                    self.root.destroy()
+                    main_window = ctk.CTk()
+                    app_clase(main_window)
+                    main_window.mainloop()
+                    return
 
-            # Verificar si es Recepcionista
-            recepcionista = obtener_recepcionista_por_rut(db, rut)
-            if recepcionista and recepcionista.contrasena == contrasena:
-                messagebox.showinfo("Éxito", "Bienvenido Recepcionista")
-                self.root.destroy()
-                main_window = ctk.CTk()
-                RecepcionistaApp(main_window)
-                main_window.mainloop()
-                return
-
-            # Si no coincide con ningún usuario
             messagebox.showerror("Error", "RUT o contraseña incorrectos")
 
         finally:
