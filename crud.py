@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from factoriUsuario import FactoriUsuario
+
 
 MODELOS = {
     "admin": Admin,
@@ -23,12 +25,21 @@ def eliminar_usuario(db: Session, rut: str, tipo: str):
     modelo = MODELOS.get(tipo)
     if not modelo:
         return False
+
     usuario = db.query(modelo).filter_by(rut=rut).first()
     if usuario:
         db.delete(usuario)
         db.commit()
+
+        persona = db.query(Persona).filter_by(rut=rut).first()
+        if persona:
+            db.delete(persona)
+            db.commit()
+
         return True
+
     return False
+
 
 def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
     modelo = MODELOS.get(tipo)
@@ -45,40 +56,7 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
 
 def crear_usuario(db, tipo, datos):
     try:
-        if tipo == "admin":
-            usuario = Admin(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="admin",
-                contrasena=datos["contrasena"]
-            )
-        elif tipo == "recepcionista":
-            usuario = Recepcionista(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="recepcionista",
-                contrasena=datos["contrasena"]
-            )
-        elif tipo == "veterinario":
-            usuario = Veterinario(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="veterinario",
-                contrasena=datos["contrasena"],
-                especializacion=datos["especializacion"]
-            )
-        else:
-            return False
-
+        usuario = FactoriUsuario.crear_usuario(tipo, datos)
         db.add(usuario)
         db.commit()
         return True
