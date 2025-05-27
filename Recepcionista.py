@@ -147,12 +147,12 @@ class GestionHorasApp:
         try:
             crear_consulta(
                 self.db,
-                fecha_hora=fecha_hora,
-                id_recepcionista=recepcionista.id,
-                id_mascota=id_mascota,
-                id_vet=vet.id,
-                id_cliente=cliente.id,
-                motivo=motivo
+                    fecha_hora=fecha_hora,
+                    id_recepcionista= recepcionista.id_recepcionista,
+                    id_mascota=id_mascota,
+                    id_vet=vet.id_vet,
+                    id_cliente=cliente.id_cliente,
+                    motivo=motivo
             )
             messagebox.showinfo("Éxito", "Hora agendada correctamente.")
             self.cargar_horas()

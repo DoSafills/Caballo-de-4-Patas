@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
 from datetime import datetime
+from models import Recepcionista
+
 
 MODELOS = {
     "admin": Admin,
