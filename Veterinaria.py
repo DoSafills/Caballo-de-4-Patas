@@ -11,53 +11,6 @@ class VeterinariaApp:
 
         self.db = SessionLocal()
 
-<<<<<<< HEAD
-        ctk.CTkLabel(self.frame_datos_animal, text="Nombre:").grid(row=0, column=0, sticky='w')
-        ctk.CTkEntry(self.frame_datos_animal).grid(row=0, column=1)
-        
-        ctk.CTkLabel(self.frame_datos_animal, text="Peso:").grid(row=1, column=0, sticky='w')
-        ctk.CTkEntry(self.frame_datos_animal).grid(row=1, column=1)
-        
-        ctk.CTkLabel(self.frame_datos_animal, text="Edad").grid(row=2, column=0, sticky='w')
-        ctk.CTkEntry(self.frame_datos_animal).grid(row=2, column=1)
-        
-        # s etiquetas y "Datos Generales"
-        labels = ["Sexo:", "Especie:", "Carácter:", "Capa:", "Dieta:", "Altura:", "Chapa:", "Raza:", "Pelo:", "Censo:", "Hábitat:", "Ojos:"]
-        opciones = [
-            ["Macho", "Hembra"], ["Canino", "Felino"], ["Dócil", "Agresivo"], ["Amarilla", "Negra", "Blanca"],
-            ["Casera y pienso", "Solo pienso"], ["Bajo", "Medio", "Alto"], [], ["Mestizo", "Pura raza"],
-            ["Corto", "Largo"], [], ["Casa", "Exterior"], ["Marrones", "Azules", "Verdes"]
-        ]
-        
-        for i in range(6):
-            ctk.CTkLabel(self.frame_datos_animal, text=labels[i]).grid(row=i+3, column=0, sticky='w', padx=5, pady=2)
-            ctk.CTkComboBox(self.frame_datos_animal, values=opciones[i]).grid(row=i+3, column=1, padx=5, pady=2)
-        
-        for i in range(6, 12):
-            ctk.CTkLabel(self.frame_datos_animal, text=labels[i]).grid(row=i-5+3, column=2, sticky='w', padx=5, pady=2)
-            ctk.CTkComboBox(self.frame_datos_animal, values=opciones[i]).grid(row=i-5+3, column=3, padx=5, pady=2)
-        
-        ver_ficha_button = ctk.CTkButton(self.frame_datos_animal, text="Ver ficha completa de la mascota")
-        ver_ficha_button.grid(row=7, column=1, columnspan=2, pady=10)
-        
-        ctk.CTkButton(self.frame_datos_animal, text="Guardar").grid(row=9, column=0, columnspan=2, pady=10)
-    
-    def crear_seccion_factura(self):
-        ctk.CTkLabel(self.frame_factura, text="Datos del animal y servicios realizados").pack()
-        ctk.CTkButton(self.frame_factura, text="Generar PDF").pack(pady=10)
-        
-    def crear_seccion_avisos(self):
-        ctk.CTkLabel(self.frame_datos_aviso, text="Avisos").pack()
-        
-    def crear_seccion_adicion(self):
-        ctk.CTkLabel(self.frame_adicion, text="Adiccion").pack()
-    
-if __name__ == "__main__":
-    root = ctk.CTk()
-    app = VeterinariaApp(root)
-    root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
-    root.mainloop()
-=======
         self.frame = ctk.CTkFrame(master=root)
         self.frame.pack(pady=20, padx=20, fill="both", expand=True)
 
@@ -154,9 +107,8 @@ if __name__ == "__main__":
     def cerrar(self):
         self.db.close()
 
-# if __name__ == '__main__':
-#     root = ctk.CTk()
-#     app = VeterinariaApp(root)
-#     root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
-#     root.mainloop()
->>>>>>> origin/ConstanzaO
+if __name__ == '__main__':
+    root = ctk.CTk()
+    app = VeterinariaApp(root)
+    root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
+    root.mainloop()

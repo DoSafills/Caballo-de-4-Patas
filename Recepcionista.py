@@ -124,7 +124,6 @@ class GestionHorasApp:
         self.hora_entry.delete(0, "end")
 
 # Ejecutar aplicación
-# if __name__ == "__main__":
-#     root = ctk.CTk()
-#     app = GestionHorasApp(root)
-#     root.mainloop()
+root = ctk.CTk()
+app = GestionHorasApp(root)
+root.mainloop()
