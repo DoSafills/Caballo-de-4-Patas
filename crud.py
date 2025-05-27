@@ -159,6 +159,20 @@ def crear_usuario(db, tipo, datos):
         print(f"error al crear usuario: {e}")
         return False
 
+def obtener_cliente_por_rut(db, rut):
+    return db.query(Cliente).filter(Cliente.rut == rut).first()
+
+def crear_cliente(db, rut):
+    try:
+        nuevo_cliente = Cliente(rut=rut)
+        db.add(nuevo_cliente)
+        db.commit()
+        db.refresh(nuevo_cliente)
+        return nuevo_cliente
+    except Exception as e:
+        db.rollback()
+        print(f"Error al crear cliente: {e}")
+        return None
 def obtener_admin_por_rut(db, rut):
     return db.query(Admin).filter_by(rut=rut).first()
 
