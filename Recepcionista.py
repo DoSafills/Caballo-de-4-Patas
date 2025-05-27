@@ -1,6 +1,10 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
+from crud import crear_consulta, eliminar_consulta, actualizar_consulta  # deberás crear estas funciones basadas en tu modelo Consulta
+from database import SessionLocal
+from datetime import datetime
+from models import Consulta  
 
 # Activar modo oscuro
 ctk.set_appearance_mode("dark")
@@ -8,6 +12,7 @@ ctk.set_default_color_theme("dark-blue")
 
 class GestionHorasApp:
     def __init__(self, root):
+        self.db = SessionLocal()  # Crear sesión DB
         self.root = root
         self.root.title("Panel Recepcionista")
         self.root.geometry("750x600")
@@ -56,11 +61,23 @@ class GestionHorasApp:
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
             return
 
-        registro = f"{fecha} {hora} - {nombre} con {mascota}"
-        self.horas_data.append(registro)
-        self.actualizar_listbox()
-        self.limpiar_campos()
-        messagebox.showinfo("Éxito", "Hora agendada correctamente.")
+        try:
+            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+        except ValueError:
+            messagebox.showerror("Error", "Formato de fecha u hora inválido.")
+            return
+        id_recepcionista = 1
+        id_mascota = 1
+        id_vet = 1
+        id_cliente = 1
+        motivo = "Consulta agendada desde app"
+
+        try:
+            crear_consulta(self.db, fecha_hora, id_recepcionista, id_mascota, id_vet, id_cliente, motivo)
+            messagebox.showinfo("Éxito", "Hora agendada correctamente en la base de datos.")
+            # Actualiza lista visual o recarga desde DB
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo agendar la hora: {e}")
 
     def eliminar_hora(self):
         seleccion = self.listbox.curselection()
@@ -123,8 +140,18 @@ class GestionHorasApp:
         self.fecha_entry.delete(0, "end")
         self.hora_entry.delete(0, "end")
 
+    def cargar_horas(self):
+        consultas = self.db.query(Consulta).all()
+        self.listbox.delete(0, "end")
+        self.horas_data = []
+        for c in consultas:
+            texto = f"{c.fecha_hora.strftime('%Y-%m-%d %H:%M')} - ClienteID:{c.id_cliente} MascotaID:{c.id_mascota}"
+            self.listbox.insert("end", texto)
+            self.horas_data.append(c)
+
+        
+
 # Ejecutar aplicación
-# if __name__ == "__main__":
-#     root = ctk.CTk()
-#     app = GestionHorasApp(root)
-#     root.mainloop()
+root = ctk.CTk()
+app = GestionHorasApp(root)
+root.mainloop()

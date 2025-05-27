@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from datetime import datetime
 
 MODELOS = {
     "admin": Admin,
@@ -41,6 +42,77 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
         db.commit()
         db.refresh(usuario)
         return usuario
+    return None
+def crear_mascota(db, nombre, id_cliente, especie, raza, edad):
+    nueva_mascota = Mascota(
+        nombre=nombre,
+        id_cliente=id_cliente,
+        especie=especie,
+        raza=raza,
+        edad=edad
+    )
+    db.add(nueva_mascota)
+    db.commit()
+    db.refresh(nueva_mascota)
+    return nueva_mascota
+
+def obtener_mascota_por_nombre(db, nombre):
+    return db.query(Mascota).filter(Mascota.nombre == nombre).first()
+
+def crear_consulta(db, fecha_hora: datetime, id_recepcionista: int, id_mascota: int, id_vet: int, id_cliente: int, motivo: str):
+    consulta = Consulta(
+        fecha_hora=fecha_hora,
+        id_recepcionista=id_recepcionista,
+        id_mascota=id_mascota,
+        id_vet=id_vet,
+        id_cliente=id_cliente,
+        motivo=motivo
+    )
+    db.add(consulta)
+    db.commit()
+    db.refresh(consulta)
+    return consulta
+
+def eliminar_mascota(db, mascota_id):
+    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
+    if mascota:
+        db.delete(mascota)
+        db.commit()
+        return True
+    return False
+
+def actualizar_mascota(db, chapa, nombre, edad, peso, altura):
+    mascota = db.query(Mascota).filter(Mascota.id == chapa).first()
+    if mascota:
+        mascota.nombre = nombre
+        mascota.edad = edad
+        mascota.peso = peso
+        mascota.altura = altura
+        db.commit()
+        db.refresh(mascota)
+        return mascota
+    return None
+
+def obtener_mascotas_por_id(db, mascota_id):
+    return db.query(Mascota).filter(Mascota.id == mascota_id).first()
+
+
+def eliminar_consulta(db, consulta_id: int):
+    consulta = db.query(Consulta).filter(Consulta.id_consulta == consulta_id).first()
+    if consulta:
+        db.delete(consulta)
+        db.commit()
+        return True
+    return False
+
+def actualizar_consulta(db, consulta_id: int, nuevos_datos: dict):
+    consulta = db.query(Consulta).filter(Consulta.id_consulta == consulta_id).first()
+    if consulta:
+        for key, value in nuevos_datos.items():
+            setattr(consulta, key, value)
+        db.commit()
+        db.refresh(consulta)
+        return consulta
     return None
 
 def crear_usuario(db, tipo, datos):
