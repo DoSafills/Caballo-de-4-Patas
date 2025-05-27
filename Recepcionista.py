@@ -1,11 +1,11 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
-from crud import crear_consulta, eliminar_consulta, actualizar_consulta,obtener_cliente_por_rut, obtener_mascota_por_nombre,obtener_veterinario_por_rut, obtener_recepcionista_por_rut
-import crud
+from crud import crear_consulta, eliminar_consulta, actualizar_consulta, obtener_cliente_por_rut, obtener_mascota_por_nombre, obtener_veterinario_por_rut, obtener_recepcionista_por_rut
 from database import SessionLocal
 from datetime import datetime
 from models import Consulta
+import crud
 
 # Activar modo oscuro
 ctk.set_appearance_mode("dark")
@@ -36,18 +36,19 @@ class GestionHorasApp:
         self.rut_cliente_entry = self._crear_campo("RUT del Cliente:", 0)
         self.nombre_mascota_entry = self._crear_campo("Nombre de la Mascota:", 1)
         self.rut_veterinario_entry = self._crear_campo("RUT del Veterinario:", 2)
-        self.fecha_entry = self._crear_campo("Fecha (YYYY-MM-DD):", 3)
-        self.hora_entry = self._crear_campo("Hora (HH:MM):", 4)
-        self.motivo_entry = self._crear_campo("Motivo:", 5)
+        self.rut_recepcionista_entry = self._crear_campo("RUT del Recepcionista:", 3)
+        self.fecha_entry = self._crear_campo("Fecha (YYYY-MM-DD):", 4)
+        self.hora_entry = self._crear_campo("Hora (HH:MM):", 5)
+        self.motivo_entry = self._crear_campo("Motivo:", 6)
 
         self.boton_agendar = ctk.CTkButton(self.form_frame, text="Agendar Hora", command=self.agendar_hora)
-        self.boton_agendar.grid(row=6, column=0, columnspan=2, pady=5)
+        self.boton_agendar.grid(row=7, column=0, columnspan=2, pady=5)
 
         self.boton_actualizar = ctk.CTkButton(self.form_frame, text="Actualizar Hora", command=self.actualizar_hora)
-        self.boton_actualizar.grid(row=7, column=0, columnspan=2, pady=5)
+        self.boton_actualizar.grid(row=8, column=0, columnspan=2, pady=5)
 
         self.boton_eliminar = ctk.CTkButton(self.form_frame, text="Eliminar Hora", command=self.eliminar_hora)
-        self.boton_eliminar.grid(row=8, column=0, columnspan=2, pady=5)
+        self.boton_eliminar.grid(row=9, column=0, columnspan=2, pady=5)
 
         # Lista de horas
         self.horas_data = []
@@ -111,13 +112,13 @@ class GestionHorasApp:
 
     def agendar_hora(self):
         rut_cliente = self.rut_cliente_entry.get().strip()
-        nombre_mascota = self.nombre_mascota_entry.get().strip()
         rut_vet = self.rut_veterinario_entry.get().strip()
+        rut_recep = self.rut_recepcionista_entry.get().strip()
         fecha = self.fecha_entry.get().strip()
         hora = self.hora_entry.get().strip()
         motivo = self.motivo_entry.get().strip()
 
-        if not all([rut_cliente, nombre_mascota, rut_vet, fecha, hora, motivo]):
+        if not all([rut_cliente, rut_vet, rut_recep, fecha, hora, motivo]):
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
             return
 
@@ -132,17 +133,13 @@ class GestionHorasApp:
             messagebox.showerror("Error", "Cliente no encontrado. Debes crearlo primero.")
             return
 
-        mascota = obtener_mascota_por_nombre(self.db, nombre_mascota)
-        if not mascota:
-            messagebox.showerror("Error", "Mascota no encontrada.")
-            return
-
+        id_mascota = 1  # Por defecto
         vet = obtener_veterinario_por_rut(self.db, rut_vet)
         if not vet:
             messagebox.showerror("Error", "Veterinario no encontrado.")
             return
 
-        recepcionista = obtener_recepcionista_por_rut(self.db, "12345678-9")
+        recepcionista = obtener_recepcionista_por_rut(self.db, rut_recep)
         if not recepcionista:
             messagebox.showerror("Error", "Recepcionista no encontrado.")
             return
@@ -152,7 +149,7 @@ class GestionHorasApp:
                 self.db,
                 fecha_hora=fecha_hora,
                 id_recepcionista=recepcionista.id,
-                id_mascota=mascota.id,
+                id_mascota=id_mascota,
                 id_vet=vet.id,
                 id_cliente=cliente.id,
                 motivo=motivo
@@ -230,6 +227,7 @@ class GestionHorasApp:
         self.hora_entry.delete(0, tk.END)
         self.hora_entry.insert(0, consulta.fecha_hora.strftime("%H:%M"))
 
+# Ejecutar la app
 if __name__ == "__main__":
     root = ctk.CTk()
     app = GestionHorasApp(root)

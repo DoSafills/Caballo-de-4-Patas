@@ -169,7 +169,8 @@ def crear_cliente(db, rut, nombre="", apellido="", edad=None, email=""):
             nombre=nombre,
             apellido=apellido,
             edad=edad,
-            email=email
+            email=email,
+            tipo="cliente"  
         )
         db.add(nuevo_cliente)
         db.commit()
