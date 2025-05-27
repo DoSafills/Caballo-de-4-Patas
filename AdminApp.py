@@ -26,9 +26,6 @@ class AdminApp(ctk.CTkFrame):
         self.rut_entry = ctk.CTkEntry(izquierda, placeholder_text="rut del usuario")
         self.rut_entry.pack(pady=5)
 
-        #self.nuevo_nombre = ctk.CTkEntry(izquierda, placeholder_text="nuevo nombre del usuario")
-        #self.nuevo_nombre.pack(pady=5)
-
         self.boton_actualizar = ctk.CTkButton(izquierda, text="actualizar", command=self.actualizar)
         self.boton_actualizar.pack(pady=5)
 
