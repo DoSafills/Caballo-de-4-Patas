@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import SessionLocal
+from crud import obtener_veterinario_por_rut,obtener_admin_por_rut,obtener_recepcionista_por_rut
 from strategyBusqueda import BusquedaPorRut
 from contextStrategy import ContextoBusqueda
 from models import Admin, Veterinario, Recepcionista
@@ -33,7 +34,7 @@ class LoginApp:
             estrategias = [
                 (Admin, AdminApp, "Administrador"),
                 (Veterinario, VeterinariaApp, "Veterinario"),
-                (Recepcionista, GestionHorasApp, "Recepcionista")
+                (Recepcionista, RecepcionistaApp, "Recepcionista")
             ]
 
             for modelo, app_clase, rol in estrategias:
