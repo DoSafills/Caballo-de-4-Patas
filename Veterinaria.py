@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
-#from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
+from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
 from database import SessionLocal
 
 class VeterinariaApp:
@@ -45,30 +45,29 @@ class VeterinariaApp:
         if not all(datos.values()):
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
-
         try:
             crear_mascota(self.db, datos['nombre'], datos['chapa'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
             messagebox.showinfo("Éxito", "Mascota registrada")
+            self.limpiar_campos()
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
     def buscar_mascota(self):
         chapa = self.entries['chapa'].get()
         nombre = self.entries['nombre'].get()
+        self.text_resultados.delete("1.0", "end")
 
         if chapa:
             mascota = obtener_mascotas_por_id(self.db, chapa)
             if mascota:
-                self.text_resultados.delete("1.0", "end")
-                self.text_resultados.insert("end", f"Nombre: {mascota.nombre}\nChapa: {mascota.id_mascota}\nEdad: {mascota.edad }\nPeso: {mascota.peso}\nAltura: {mascota.altura}\n")
+                self.text_resultados.insert("end", f"Nombre: {mascota.nombre}\nChapa: {mascota.id_mascota}\nEdad: {mascota.edad}\nPeso: {mascota.peso}\nAltura: {mascota.altura}\n")
             else:
                 messagebox.showinfo("Sin resultados", "No se encontró la mascota")
         elif nombre:
             mascotas = obtener_mascota_por_nombre(self.db, nombre)
             if mascotas:
-                self.text_resultados.delete("1.0", "end")
                 for mascota in mascotas:
-                    self.text_resultados.insert("end", f"{mascota.nombre} - {mascota.chapa}\n")
+                    self.text_resultados.insert("end", f"{mascota.nombre} - {mascota.id_mascota}\n")
             else:
                 messagebox.showinfo("Sin resultados", "No se encontraron mascotas con ese nombre")
         else:
@@ -79,11 +78,11 @@ class VeterinariaApp:
         if not all(datos.values()):
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
-
         try:
             mascota = actualizar_mascota(self.db, datos['chapa'], datos['nombre'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
             if mascota:
                 messagebox.showinfo("Éxito", "Mascota actualizada")
+                self.limpiar_campos()
             else:
                 messagebox.showinfo("Sin resultados", "No se encontró la mascota")
         except Exception as e:
@@ -94,21 +93,22 @@ class VeterinariaApp:
         if not chapa:
             messagebox.showerror("Error", "Ingrese la chapa de la mascota a eliminar")
             return
-
         try:
             exito = eliminar_mascota(self.db, chapa)
             if exito:
                 messagebox.showinfo("Éxito", "Mascota eliminada")
+                self.limpiar_campos()
+                self.text_resultados.delete("1.0", "end")
             else:
                 messagebox.showinfo("Sin resultados", "No se encontró la mascota")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
+    def limpiar_campos(self):
+        for entry in self.entries.values():
+            entry.delete(0, "end")
+
     def cerrar(self):
         self.db.close()
 
-# if __name__ == '__main__':
-#     root = ctk.CTk()
-#     app = VeterinariaApp(root)
-#     root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
-#     root.mainloop()
+
