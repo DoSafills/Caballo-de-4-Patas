@@ -107,8 +107,8 @@ class VeterinariaApp:
     def cerrar(self):
         self.db.close()
 
-if __name__ == '__main__':
-    root = ctk.CTk()
-    app = VeterinariaApp(root)
-    root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
-    root.mainloop()
+# if __name__ == '__main__':
+#     root = ctk.CTk()
+#     app = VeterinariaApp(root)
+#     root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
+#     root.mainloop()
