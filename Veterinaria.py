@@ -2,144 +2,198 @@ import customtkinter as ctk
 from tkinter import messagebox
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-import crud
 import models
+from models import create_tables
+import os
+from controller import MascotaController  # <-- Controlador
+from factories import VentanaFactory
+
+
+#  FACTORY
+class MascotaFactory:
+    @staticmethod
+    def crear(nombre, raza, sexo, dieta, caracter, habitat, edad, peso, altura, id_vet):
+        return {
+            "nombre": nombre,
+            "raza": raza,
+            "sexo": sexo,
+            "dieta": dieta,
+            "caracter": caracter,
+            "habitat": habitat,
+            "edad": int(edad),
+            "peso": peso,
+            "altura": altura,
+            "id_vet": id_vet
+        }
 
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-# Configurar la base de datos
-engine = create_engine("sqlite:///veterinaria.db")
+# Ruta al directorio actual
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+db_path = os.path.join(parent_dir, "veterinaria.db")
+engine = create_engine(f"sqlite:///{db_path}")
 Session = sessionmaker(bind=engine)
 db = Session()
+create_tables(engine)
 
 class VeterinariaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Registro de Mascotas")
-        self.root.geometry("750x600")
+        self.root.geometry("1800x1020")
         self.root.resizable(False, False)
+        self.root.configure(bg="#f7f7f7")
+        self.controller = MascotaController(db, MascotaFactory)
 
-        # -------------- VARIABLES ----------------
+        # Variables
         self.nombre_mascota = ctk.StringVar()
+        self.raza = ctk.StringVar()
+        self.sexo = ctk.StringVar()
+        self.dieta = ctk.StringVar()
+        self.caracter = ctk.StringVar()
+        self.habitat = ctk.StringVar()
         self.edad = ctk.StringVar()
         self.peso = ctk.StringVar()
         self.altura = ctk.StringVar()
-        self.nombre_dueno = ctk.StringVar()
-        self.apellido_dueno = ctk.StringVar()
-        self.rut_dueno = ctk.StringVar()
-        self.email_dueno = ctk.StringVar()
-        self.edad_dueno = ctk.StringVar()
+        self.vacunas = ctk.BooleanVar()
+        self.vet_seleccionado = ctk.StringVar()
 
-        # -------------- ENCABEZADO ----------------
-        encabezado = ctk.CTkFrame(self.root, fg_color="white")
-        encabezado.pack(pady=10, fill="x")
 
-        logo = ctk.CTkLabel(encabezado, text="🐾 VETERINARIA APP", font=("Arial", 20, "bold"), text_color="black")
-        logo.pack(side="left", padx=20)
+        self.nombre_duenio = ctk.StringVar()
+        self.email_duenio = ctk.StringVar()
+        self.telefono_duenio = ctk.StringVar()
 
-        ctk.CTkLabel(self.root, text="Registro de Mascota", font=("Arial", 22, "bold")).pack(pady=5)
-        ctk.CTkLabel(self.root, text="Complete los datos de la mascota y su dueño", font=("Arial", 14)).pack()
 
-        # -------------- FORMULARIO ----------------
-        form_frame = ctk.CTkFrame(self.root)
-        form_frame.pack(pady=20, fill="x", padx=30)
+        self.main_card()
 
-        # --- Datos Mascota ---
-        mascota_frame = ctk.CTkFrame(form_frame, fg_color="white")
-        mascota_frame.grid(row=0, column=0, padx=20, sticky="n")
+    def main_card(self):
+        container = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=20)
+        container.pack(pady=40, padx=40, fill="both")
 
-        ctk.CTkLabel(mascota_frame, text="Datos de la Mascota", font=("Arial", 16, "bold")).pack(pady=10)
+        ctk.CTkLabel(container, text="HOME PETS", font=("Arial", 20, "bold"), text_color="#000").pack(anchor="nw", pady=(15, 0), padx=20)
+        ctk.CTkLabel(container, text="Asistencia de Reserva", font=("Arial", 22, "bold"), text_color="#000").pack(pady=(0, 5))
+        ctk.CTkLabel(container, text="Precio de la consulta: S/. 50.00", font=("Arial", 14), text_color="#555").pack(pady=(0, 20))
 
-        ctk.CTkLabel(mascota_frame, text="Nombre").pack(anchor="w")
-        ctk.CTkEntry(mascota_frame, textvariable=self.nombre_mascota, placeholder_text="Firulais").pack(fill="x")
+        
+               # Marco principal dividido en navegación y contenido
+        main_frame = ctk.CTkFrame(self.root)
+        main_frame.pack(fill="both", expand=True)
 
-        ctk.CTkLabel(mascota_frame, text="Edad").pack(anchor="w", pady=(5, 0))
-        ctk.CTkEntry(mascota_frame, textvariable=self.edad, placeholder_text="3").pack(fill="x")
 
-        ctk.CTkLabel(mascota_frame, text="Peso (kg)").pack(anchor="w", pady=(5, 0))
-        ctk.CTkEntry(mascota_frame, textvariable=self.peso, placeholder_text="12.5").pack(fill="x")
+        
 
-        ctk.CTkLabel(mascota_frame, text="Altura (cm)").pack(anchor="w", pady=(5, 0))
-        ctk.CTkEntry(mascota_frame, textvariable=self.altura, placeholder_text="45").pack(fill="x")
 
-        # --- Datos Dueño ---
-        dueno_frame = ctk.CTkFrame(form_frame, fg_color="white")
-        dueno_frame.grid(row=0, column=1, padx=20, sticky="n")
+        nav_frame = ctk.CTkFrame(main_frame, width=200)
+        nav_frame.pack(side="left", fill="y", padx=10, pady=10)
 
-        ctk.CTkLabel(dueno_frame, text="Datos del Dueño", font=("Arial", 16, "bold")).pack(pady=10)
+        form_frame = ctk.CTkFrame(container, fg_color="#ffffff")
+        form_frame.pack(padx=30, pady=20, fill="both")
 
-        ctk.CTkLabel(dueno_frame, text="RUT").pack(anchor="w")
-        ctk.CTkEntry(dueno_frame, textvariable=self.rut_dueno, placeholder_text="12345678-9").pack(fill="x")
+        form_frame.grid_columnconfigure(0, weight=1)
+        form_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(dueno_frame, text="Nombre").pack(anchor="w")
-        ctk.CTkEntry(dueno_frame, textvariable=self.nombre_dueno, placeholder_text="Juan").pack(fill="x")
 
-        ctk.CTkLabel(dueno_frame, text="Apellido").pack(anchor="w")
-        ctk.CTkEntry(dueno_frame, textvariable=self.apellido_dueno, placeholder_text="Pérez").pack(fill="x")
+    # Entradas tipo texto
+        campos = [
+            ("Nombre", self.nombre_mascota, "Firulais"),
+            ("Raza", self.raza, "Golden Retriever"),
+            ("Edad", self.edad, "Ej: 3"),
+            ("Peso (kg)", self.peso, "Ej: 10.5"),
+            ("Altura (cm)", self.altura, "Ej: 40")
+        ]
 
-        ctk.CTkLabel(dueno_frame, text="Edad").pack(anchor="w")
-        ctk.CTkEntry(dueno_frame, textvariable=self.edad_dueno, placeholder_text="30").pack(fill="x")
+        for texto, var, placeholder in campos:
+            ctk.CTkLabel(form_frame, text=texto, text_color="#555").pack(anchor="w")
+            ctk.CTkEntry(form_frame, textvariable=var, placeholder_text=placeholder, corner_radius=0).pack(fill="x", pady=4)
 
-        ctk.CTkLabel(dueno_frame, text="Email").pack(anchor="w")
-        ctk.CTkEntry(dueno_frame, textvariable=self.email_dueno, placeholder_text="juan@mail.com").pack(fill="x")
+        # ComboBoxes predefinidos
+        ctk.CTkLabel(form_frame, text="Sexo", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Macho", "Hembra"], variable=self.sexo, state="readonly", corner_radius=0).pack(fill="x", pady=4)
 
-        # -------------- BOTONES ----------------
-        boton_frame = ctk.CTkFrame(self.root, fg_color="white")
+        ctk.CTkLabel(form_frame, text="Dieta", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Normal", "Especial", "Dietética"], variable=self.dieta, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        ctk.CTkLabel(form_frame, text="Carácter", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Tranquilo", "Agresivo", "Juguetón", "Tímido"], variable=self.caracter, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        ctk.CTkLabel(form_frame, text="Hábitat", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Casa", "Patio", "Campo", "Interior", "Exterior"], variable=self.habitat, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        # Veterinarios
+        veterinarios = db.query(models.Veterinario).all()
+        self.vet_ids = [f"{vet.id_vet} - {vet.nombre}" for vet in veterinarios]
+
+        ctk.CTkLabel(form_frame, text="Veterinario", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=self.vet_ids, variable=self.vet_seleccionado, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        # Botones
+        boton_frame = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=0, border_width=1, border_color="#cccccc")
         boton_frame.pack(pady=20)
 
-        ctk.CTkButton(boton_frame, text="VOLVER", fg_color="white", text_color="black", border_width=1,
-                    border_color="black", width=120, command=self.root.destroy).pack(side="left", padx=10)
+        ctk.CTkLabel(nav_frame, text="Menú", font=("Arial", 16, "bold")).pack(pady=10)
+        ctk.CTkButton(boton_frame, text="REGISTRAR", fg_color="#2c3e50", text_color="white",
+                    width=120, command=self.registrar_mascota, corner_radius=0).pack(side="left", padx=10)
+        ctk.CTkButton(nav_frame, text="Gestionar Mascotas", command=self.abrir_gestion_ventana, fg_color="#2980b9", text_color="white").pack(pady=5, fill="x")
+        ctk.CTkButton(nav_frame, text="Historial Médico", command=self.abrir_historial_ventana, fg_color="#8e44ad", text_color="white").pack(pady=5, fill="x")
 
-        ctk.CTkButton(boton_frame, text="REGISTRAR", fg_color="#007BFF", text_color="white",
-                    width=120, command=self.registrar_mascota).pack(side="left", padx=10)
+        ctk.CTkButton(nav_frame, text="Salir", command=self.root.quit, fg_color="#c0392b", text_color="white").pack(pady=5, fill="x")
+# factory
 
-        ctk.CTkButton(boton_frame, text="FINALIZAR", fg_color="black", width=120,
-                    command=self.root.destroy).pack(side="left", padx=10)
+
+    def abrir_historial_ventana(self):
+        from factories import VentanaFactory
+        VentanaFactory.crear("historial", self.root, self.controller)
+
+
+    def abrir_gestion_ventana(self):
+        VentanaFactory.crear("gestion", self.root, self.controller)
+
 
     def registrar_mascota(self):
-        # Validar campos
         campos = [
-            self.nombre_mascota.get(), self.edad.get(), self.peso.get(), self.altura.get(),
-            self.rut_dueno.get(), self.nombre_dueno.get(), self.apellido_dueno.get(),
-            self.edad_dueno.get(), self.email_dueno.get()
+            self.nombre_mascota.get(), self.raza.get(), self.sexo.get(), self.dieta.get(),
+            self.caracter.get(), self.habitat.get(), self.edad.get(),
+            self.peso.get(), self.altura.get(), self.vet_seleccionado.get()
         ]
         if not all(campos):
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
 
         try:
-            mascota_data = {
+            id_vet = int(self.vet_seleccionado.get().split(" - ")[0])
+
+            datos = {
                 "nombre": self.nombre_mascota.get(),
-                "edad": int(self.edad.get()),
+                "raza": self.raza.get(),
+                "sexo": self.sexo.get(),
+                "dieta": self.dieta.get(),
+                "caracter": self.caracter.get(),
+                "habitat": self.habitat.get(),
+                "edad": self.edad.get(),
                 "peso": self.peso.get(),
                 "altura": self.altura.get(),
-                "raza": "Desconocida",
-                "sexo": "Desconocido",
-                "dieta": "Normal",
-                "caracter": "Tranquilo",
-                "habitat": "Casa",
-                "id_vet": None  # A definir si hay veterinarios disponibles
+                "id_vet": id_vet
             }
-            mascota = crud.crear_mascota(db, mascota_data)
 
-            cliente_data = {
-                "rut": self.rut_dueno.get(),
-                "nombre": self.nombre_dueno.get(),
-                "apellido": self.apellido_dueno.get(),
-                "edad": int(self.edad_dueno.get()),
-                "email": self.email_dueno.get(),
-                "tipo": "cliente",
-                "id_mascota": mascota.id_mascota
-            }
-            crud.crear_cliente(db, cliente_data)
-            messagebox.showinfo("Éxito", "Mascota y cliente registrados correctamente")
+            mascota = self.controller.registrar_mascota(datos)
+            messagebox.showinfo("Éxito", f"Mascota '{mascota.nombre}' registrada correctamente.")
+
+            for var in [self.nombre_mascota, self.raza, self.sexo, self.dieta,
+                        self.caracter, self.habitat, self.edad, self.peso, self.altura, self.vet_seleccionado]:
+                var.set("")
 
         except Exception as e:
             db.rollback()
             messagebox.showerror("Error", str(e))
 
-if __name__ == '__main__':
+
+    def cerrar(self):
+        self.db.cloce()
+
+if __name__ == "__main__":
     root = ctk.CTk()
     app = VeterinariaApp(root)
+    root.protocol('WM_DELTE_WINDOW')
     root.mainloop()

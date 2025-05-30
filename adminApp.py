@@ -116,3 +116,4 @@ class AdminApp(ctk.CTkFrame):
             self.cargar_usuarios("todos")
         else:
             messagebox.showerror("error", "no se pudo crear")
+
