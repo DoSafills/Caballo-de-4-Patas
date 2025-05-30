@@ -1,114 +1,145 @@
 import customtkinter as ctk
 from tkinter import messagebox
-#from crud import crear_mascota, obtener_mascota_por_nombre, eliminar_mascota, actualizar_mascota, obtener_mascotas_por_id
-from database import SessionLocal
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+import crud 
+import models
+from models import create_tables
+import os
+from controller import MascotaController  # <-- Controlador
+
+#  FACTORY
+class MascotaFactory:
+    @staticmethod
+    def crear(nombre, raza, sexo, dieta, caracter, habitat, edad, peso, altura, id_vet):
+        return {
+            "nombre": nombre,
+            "raza": raza,
+            "sexo": sexo,
+            "dieta": dieta,
+            "caracter": caracter,
+            "habitat": habitat,
+            "edad": int(edad),
+            "peso": peso,
+            "altura": altura,
+            "id_vet": id_vet
+        }
+
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
+
+# Ruta al directorio actual
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+db_path = os.path.join(parent_dir, "veterinaria.db")
+engine = create_engine(f"sqlite:///{db_path}")
+Session = sessionmaker(bind=engine)
+db = Session()
+create_tables(engine)
 
 class VeterinariaApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Sistema de Gestión Veterinaria")
-        self.root.geometry("600x700")
+        self.root.title("Registro de Mascotas")
+        self.root.geometry("600x1050")
+        self.root.resizable(False, False)
+        self.root.configure(bg="#f0f0f0")
 
-        self.db = SessionLocal()
+        self.controller = MascotaController(db, MascotaFactory)
 
-        self.frame = ctk.CTkFrame(master=root)
-        self.frame.pack(pady=20, padx=20, fill="both", expand=True)
+        # Variables
+        self.nombre_mascota = ctk.StringVar()
+        self.raza = ctk.StringVar()
+        self.sexo = ctk.StringVar()
+        self.dieta = ctk.StringVar()
+        self.caracter = ctk.StringVar()
+        self.habitat = ctk.StringVar()
+        self.edad = ctk.StringVar()
+        self.peso = ctk.StringVar()
+        self.altura = ctk.StringVar()
+        self.vet_seleccionado = ctk.StringVar()
 
-        self.label = ctk.CTkLabel(master=self.frame, text="Gestión de Mascotas", font=("Arial", 20))
-        self.label.pack(pady=12, padx=10)
+        ctk.CTkLabel(self.root, text="Registro de Mascota", font=("Arial", 22, "bold"), text_color="#333").pack(pady=15)
 
-        self.entries = {}
-        for campo in ['nombre', 'chapa', 'edad', 'peso', 'altura']:
-            label = ctk.CTkLabel(master=self.frame, text=campo.capitalize())
-            label.pack()
-            entry = ctk.CTkEntry(master=self.frame)
-            entry.pack()
-            self.entries[campo] = entry
+        form_frame = ctk.CTkFrame(self.root, corner_radius=0, border_width=1, border_color="#cccccc")
+        form_frame.pack(pady=20, fill="x", padx=30)
 
-        self.boton_registrar = ctk.CTkButton(master=self.frame, text="Registrar Mascota", command=self.registrar_mascota)
-        self.boton_registrar.pack(pady=10)
+        # Entradas tipo texto
+        campos = [
+            ("Nombre", self.nombre_mascota, "Firulais"),
+            ("Raza", self.raza, "Golden Retriever"),
+            ("Edad", self.edad, "Ej: 3"),
+            ("Peso (kg)", self.peso, "Ej: 10.5"),
+            ("Altura (cm)", self.altura, "Ej: 40")
+        ]
 
-        self.boton_buscar = ctk.CTkButton(master=self.frame, text="Buscar Mascota", command=self.buscar_mascota)
-        self.boton_buscar.pack(pady=10)
+        for texto, var, placeholder in campos:
+            ctk.CTkLabel(form_frame, text=texto, text_color="#555").pack(anchor="w")
+            ctk.CTkEntry(form_frame, textvariable=var, placeholder_text=placeholder, corner_radius=0).pack(fill="x", pady=4)
 
-        self.boton_actualizar = ctk.CTkButton(master=self.frame, text="Actualizar Mascota", command=self.actualizar_mascota)
-        self.boton_actualizar.pack(pady=10)
+        # ComboBoxes predefinidos
+        ctk.CTkLabel(form_frame, text="Sexo", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Macho", "Hembra"], variable=self.sexo, state="readonly", corner_radius=0).pack(fill="x", pady=4)
 
-        self.boton_eliminar = ctk.CTkButton(master=self.frame, text="Eliminar Mascota", command=self.eliminar_mascota)
-        self.boton_eliminar.pack(pady=10)
+        ctk.CTkLabel(form_frame, text="Dieta", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Normal", "Especial", "Dietética"], variable=self.dieta, state="readonly", corner_radius=0).pack(fill="x", pady=4)
 
-        self.text_resultados = ctk.CTkTextbox(master=self.frame, height=200)
-        self.text_resultados.pack(pady=10)
+        ctk.CTkLabel(form_frame, text="Carácter", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Tranquilo", "Agresivo", "Juguetón", "Tímido"], variable=self.caracter, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        ctk.CTkLabel(form_frame, text="Hábitat", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=["Casa", "Patio", "Campo", "Interior", "Exterior"], variable=self.habitat, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        # Veterinarios
+        veterinarios = db.query(models.Veterinario).all()
+        self.vet_ids = [f"{vet.id_vet} - {vet.nombre}" for vet in veterinarios]
+
+        ctk.CTkLabel(form_frame, text="Veterinario", text_color="#555").pack(anchor="w")
+        ctk.CTkComboBox(form_frame, values=self.vet_ids, variable=self.vet_seleccionado, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+
+        # Botones
+        boton_frame = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=0, border_width=1, border_color="#cccccc")
+        boton_frame.pack(pady=20)
+
+        ctk.CTkButton(boton_frame, text="REGISTRAR", fg_color="#2c3e50", text_color="white",
+                    width=120, command=self.registrar_mascota, corner_radius=0).pack(side="left", padx=10)
+
+        ctk.CTkButton(boton_frame, text="SALIR", fg_color="#7f8c8d", text_color="white", width=120,
+                    command=self.root.destroy, corner_radius=0).pack(side="left", padx=10)
 
     def registrar_mascota(self):
-        datos = {campo: self.entries[campo].get() for campo in self.entries}
-        if not all(datos.values()):
+        campos = [
+            self.nombre_mascota.get(), self.raza.get(), self.sexo.get(), self.dieta.get(),
+            self.caracter.get(), self.habitat.get(), self.edad.get(),
+            self.peso.get(), self.altura.get(), self.vet_seleccionado.get()
+        ]
+        if not all(campos):
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
 
         try:
-            crear_mascota(self.db, datos['nombre'], datos['chapa'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
-            messagebox.showinfo("Éxito", "Mascota registrada")
+            id_vet = int(self.vet_seleccionado.get().split(" - ")[0])
+
+            datos = {
+                "nombre": self.nombre_mascota.get(),
+                "raza": self.raza.get(),
+                "sexo": self.sexo.get(),
+                "dieta": self.dieta.get(),
+                "caracter": self.caracter.get(),
+                "habitat": self.habitat.get(),
+                "edad": self.edad.get(),
+                "peso": self.peso.get(),
+                "altura": self.altura.get(),
+                "id_vet": id_vet
+            }
+
+            mascota = self.controller.registrar_mascota(datos)
+            messagebox.showinfo("Éxito", f"Mascota '{mascota.nombre}' registrada correctamente.")
+
+            for var in [self.nombre_mascota, self.raza, self.sexo, self.dieta,
+                        self.caracter, self.habitat, self.edad, self.peso, self.altura, self.vet_seleccionado]:
+                var.set("")
+
         except Exception as e:
+            db.rollback()
             messagebox.showerror("Error", str(e))
-
-    def buscar_mascota(self):
-        chapa = self.entries['chapa'].get()
-        nombre = self.entries['nombre'].get()
-
-        if chapa:
-            mascota = obtener_mascotas_por_id(self.db, chapa)
-            if mascota:
-                self.text_resultados.delete("1.0", "end")
-                self.text_resultados.insert("end", f"Nombre: {mascota.nombre}\nChapa: {mascota.id_mascota}\nEdad: {mascota.edad }\nPeso: {mascota.peso}\nAltura: {mascota.altura}\n")
-            else:
-                messagebox.showinfo("Sin resultados", "No se encontró la mascota")
-        elif nombre:
-            mascotas = obtener_mascota_por_nombre(self.db, nombre)
-            if mascotas:
-                self.text_resultados.delete("1.0", "end")
-                for mascota in mascotas:
-                    self.text_resultados.insert("end", f"{mascota.nombre} - {mascota.chapa}\n")
-            else:
-                messagebox.showinfo("Sin resultados", "No se encontraron mascotas con ese nombre")
-        else:
-            messagebox.showinfo("Advertencia", "Ingrese al menos el nombre o la chapa")
-
-    def actualizar_mascota(self):
-        datos = {campo: self.entries[campo].get() for campo in self.entries}
-        if not all(datos.values()):
-            messagebox.showerror("Error", "Todos los campos son obligatorios")
-            return
-
-        try:
-            mascota = actualizar_mascota(self.db, datos['chapa'], datos['nombre'], int(datos['edad']), float(datos['peso']), float(datos['altura']))
-            if mascota:
-                messagebox.showinfo("Éxito", "Mascota actualizada")
-            else:
-                messagebox.showinfo("Sin resultados", "No se encontró la mascota")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def eliminar_mascota(self):
-        chapa = self.entries['chapa'].get()
-        if not chapa:
-            messagebox.showerror("Error", "Ingrese la chapa de la mascota a eliminar")
-            return
-
-        try:
-            exito = eliminar_mascota(self.db, chapa)
-            if exito:
-                messagebox.showinfo("Éxito", "Mascota eliminada")
-            else:
-                messagebox.showinfo("Sin resultados", "No se encontró la mascota")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def cerrar(self):
-        self.db.close()
-
-if __name__ == '__main__':
-    root = ctk.CTk()
-    app = VeterinariaApp(root)
-    root.protocol("WM_DELETE_WINDOW", lambda: (app.cerrar(), root.destroy()))
-    root.mainloop()
