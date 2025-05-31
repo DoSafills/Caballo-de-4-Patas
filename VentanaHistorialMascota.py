@@ -55,7 +55,7 @@ class VentanaHistorialMascota:
             messagebox.showinfo("Sin resultados", "No hay historial para esta mascota.")
         else:
             for h in historiales:
-                self.tree.insert("", "end", values=(h.id_historial, h.fecha, h.descripcion))
+                self.tree.insert("", "end", values=( h.fecha, h.descripcion))
 
     def agregar_historial(self):
         mascota_id = self.id_mascota.get()
