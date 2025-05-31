@@ -122,9 +122,3 @@ class GestionHorasApp:
         self.mascota_entry.delete(0, "end")
         self.fecha_entry.delete(0, "end")
         self.hora_entry.delete(0, "end")
-
-# Ejecutar aplicación
-# if __name__ == "__main__":
-#     root = ctk.CTk()
-#     app = GestionHorasApp(root)
-#     root.mainloop()

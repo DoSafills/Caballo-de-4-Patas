@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+import models
 
 MODELOS = {
     "admin": Admin,
@@ -95,3 +96,15 @@ def obtener_veterinario_por_rut(db, rut):
 
 def obtener_recepcionista_por_rut(db, rut):
     return db.query(Recepcionista).filter_by(rut=rut).first()
+
+
+def crear_mascota(db, mascota_data):
+    try:
+        nueva_mascota = models.Mascota(**mascota_data)
+        db.add(nueva_mascota)
+        db.commit()
+        db.refresh(nueva_mascota)
+        return nueva_mascota
+    except Exception as e:
+        db.rollback()
+        raise e
