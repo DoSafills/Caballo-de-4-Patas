@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from factoriUsuario import FactoriUsuario
 from datetime import datetime
-from models import Recepcionista
-
 
 MODELOS = {
     "admin": Admin,
@@ -26,12 +25,21 @@ def eliminar_usuario(db: Session, rut: str, tipo: str):
     modelo = MODELOS.get(tipo)
     if not modelo:
         return False
+
     usuario = db.query(modelo).filter_by(rut=rut).first()
     if usuario:
         db.delete(usuario)
         db.commit()
+
+        persona = db.query(Persona).filter_by(rut=rut).first()
+        if persona:
+            db.delete(persona)
+            db.commit()
+
         return True
+
     return False
+
 
 def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
     modelo = MODELOS.get(tipo)
@@ -45,6 +53,27 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
         db.refresh(usuario)
         return usuario
     return None
+
+def crear_usuario(db, tipo, datos):
+    try:
+        usuario = FactoriUsuario.crear_usuario(tipo, datos)
+        db.add(usuario)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"error al crear usuario: {e}")
+        return False
+
+def obtener_admin_por_rut(db, rut):
+    return db.query(Admin).filter_by(rut=rut).first()
+
+def obtener_veterinario_por_rut(db, rut):
+    return db.query(Veterinario).filter_by(rut=rut).first()
+
+def obtener_recepcionista_por_rut(db, rut):
+    return db.query(Recepcionista).filter_by(rut=rut).first()
+
 def crear_mascota(db, nombre, id_cliente, especie, raza, edad):
     nueva_mascota = Mascota(
         nombre=nombre,
@@ -117,49 +146,6 @@ def actualizar_consulta(db, consulta_id: int, nuevos_datos: dict):
         return consulta
     return None
 
-def crear_usuario(db, tipo, datos):
-    try:
-        if tipo == "admin":
-            usuario = Admin(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="admin",
-                contrasena=datos["contrasena"]
-            )
-        elif tipo == "recepcionista":
-            usuario = Recepcionista(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="recepcionista",
-                contrasena=datos["contrasena"]
-            )
-        elif tipo == "veterinario":
-            usuario = Veterinario(
-                rut=datos["rut"],
-                nombre=datos["nombre"],
-                apellido=datos["apellido"],
-                edad=datos["edad"],
-                email=datos["email"],
-                tipo="veterinario",
-                contrasena=datos["contrasena"],
-                especializacion=datos["especializacion"]
-            )
-        else:
-            return False
-
-        db.add(usuario)
-        db.commit()
-        return True
-    except Exception as e:
-        db.rollback()
-        print(f"error al crear usuario: {e}")
-        return False
 
 def obtener_cliente_por_rut(db, rut):
     return db.query(Cliente).filter(Cliente.rut == rut).first()

@@ -2,12 +2,11 @@ import customtkinter as ctk
 from tkinter import messagebox
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import crud 
 import models
 from models import create_tables
 import os
 from controller import MascotaController  # <-- Controlador
-from factories import VentanaFactory
-
 
 #  FACTORY
 class MascotaFactory:
@@ -42,9 +41,10 @@ class VeterinariaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Registro de Mascotas")
-        self.root.geometry("1800x1020")
+        self.root.geometry("600x1050")
         self.root.resizable(False, False)
-        self.root.configure(bg="#f7f7f7")
+        self.root.configure(bg="#f0f0f0")
+
         self.controller = MascotaController(db, MascotaFactory)
 
         # Variables
@@ -57,45 +57,14 @@ class VeterinariaApp:
         self.edad = ctk.StringVar()
         self.peso = ctk.StringVar()
         self.altura = ctk.StringVar()
-        self.vacunas = ctk.BooleanVar()
         self.vet_seleccionado = ctk.StringVar()
 
+        ctk.CTkLabel(self.root, text="Registro de Mascota", font=("Arial", 22, "bold"), text_color="#333").pack(pady=15)
 
-        self.nombre_duenio = ctk.StringVar()
-        self.email_duenio = ctk.StringVar()
-        self.telefono_duenio = ctk.StringVar()
+        form_frame = ctk.CTkFrame(self.root, corner_radius=0, border_width=1, border_color="#cccccc")
+        form_frame.pack(pady=20, fill="x", padx=30)
 
-
-        self.main_card()
-
-    def main_card(self):
-        container = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=20)
-        container.pack(pady=40, padx=40, fill="both")
-
-        ctk.CTkLabel(container, text="HOME PETS", font=("Arial", 20, "bold"), text_color="#000").pack(anchor="nw", pady=(15, 0), padx=20)
-        ctk.CTkLabel(container, text="Asistencia de Reserva", font=("Arial", 22, "bold"), text_color="#000").pack(pady=(0, 5))
-        ctk.CTkLabel(container, text="Precio de la consulta: S/. 50.00", font=("Arial", 14), text_color="#555").pack(pady=(0, 20))
-
-        
-               # Marco principal dividido en navegación y contenido
-        main_frame = ctk.CTkFrame(self.root)
-        main_frame.pack(fill="both", expand=True)
-
-
-        
-
-
-        nav_frame = ctk.CTkFrame(main_frame, width=200)
-        nav_frame.pack(side="left", fill="y", padx=10, pady=10)
-
-        form_frame = ctk.CTkFrame(container, fg_color="#ffffff")
-        form_frame.pack(padx=30, pady=20, fill="both")
-
-        form_frame.grid_columnconfigure(0, weight=1)
-        form_frame.grid_columnconfigure(1, weight=1)
-
-
-    # Entradas tipo texto
+        # Entradas tipo texto
         campos = [
             ("Nombre", self.nombre_mascota, "Firulais"),
             ("Raza", self.raza, "Golden Retriever"),
@@ -132,24 +101,11 @@ class VeterinariaApp:
         boton_frame = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=0, border_width=1, border_color="#cccccc")
         boton_frame.pack(pady=20)
 
-        ctk.CTkLabel(nav_frame, text="Menú", font=("Arial", 16, "bold")).pack(pady=10)
         ctk.CTkButton(boton_frame, text="REGISTRAR", fg_color="#2c3e50", text_color="white",
                     width=120, command=self.registrar_mascota, corner_radius=0).pack(side="left", padx=10)
-        ctk.CTkButton(nav_frame, text="Gestionar Mascotas", command=self.abrir_gestion_ventana, fg_color="#2980b9", text_color="white").pack(pady=5, fill="x")
-        ctk.CTkButton(nav_frame, text="Historial Médico", command=self.abrir_historial_ventana, fg_color="#8e44ad", text_color="white").pack(pady=5, fill="x")
 
-        ctk.CTkButton(nav_frame, text="Salir", command=self.root.quit, fg_color="#c0392b", text_color="white").pack(pady=5, fill="x")
-# factory
-
-
-    def abrir_historial_ventana(self):
-        from factories import VentanaFactory
-        VentanaFactory.crear("historial", self.root, self.controller)
-
-
-    def abrir_gestion_ventana(self):
-        VentanaFactory.crear("gestion", self.root, self.controller)
-
+        ctk.CTkButton(boton_frame, text="SALIR", fg_color="#7f8c8d", text_color="white", width=120,
+                    command=self.root.destroy, corner_radius=0).pack(side="left", padx=10)
 
     def registrar_mascota(self):
         campos = [
@@ -187,13 +143,3 @@ class VeterinariaApp:
         except Exception as e:
             db.rollback()
             messagebox.showerror("Error", str(e))
-
-
-    def cerrar(self):
-        self.db.cloce()
-
-if __name__ == "__main__":
-    root = ctk.CTk()
-    app = VeterinariaApp(root)
-    root.protocol('WM_DELTE_WINDOW')
-    root.mainloop()

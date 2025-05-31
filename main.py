@@ -1,7 +1,4 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from models import Base  # Asegúrate que esto importa la clase Base
-import models  # Esto debe importar también la clase Mascota
+
 from sqlalchemy.orm import Session
 from database import SessionLocal, inicializar_base
 import crud
@@ -10,9 +7,6 @@ from datetime import datetime
 # Inicializar base de datos y sesión
 inicializar_base()
 db: Session = SessionLocal()
-
-engine = create_engine("sqlite:///veterinaria.db")
-Base.metadata.create_all(engine)
 
 # Crear un cliente
 cliente_data = {
@@ -98,4 +92,3 @@ admin = crud.crear_admin(db, admin_data)
 
 
 print(f"Consulta creada para {mascota.nombre} con el Dr. {veterinario.nombre} registrada por {recepcionista.nombre}")
-print("Tablas creadas correctamente")
