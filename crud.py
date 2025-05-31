@@ -11,7 +11,7 @@ MODELOS = {
     "veterinario": Veterinario
 }
 
-# CRUD adminapp
+# --- CRUD de usuarios ---
 def obtener_usuarios_por_tipo(db: Session, tipo: str):
     if tipo == "todos":
         resultado = []
@@ -21,25 +21,16 @@ def obtener_usuarios_por_tipo(db: Session, tipo: str):
     modelo = MODELOS.get(tipo)
     return db.query(modelo).all() if modelo else []
 
-def eliminar_usuario(db: Session, rut: str, tipo: str):
-    modelo = MODELOS.get(tipo)
-    if not modelo:
-        return False
-
-    usuario = db.query(modelo).filter_by(rut=rut).first()
-    if usuario:
-        db.delete(usuario)
+def crear_usuario(db: Session, tipo: str, datos: dict):
+    try:
+        usuario = FactoriUsuario.crear_usuario(tipo, datos)
+        db.add(usuario)
         db.commit()
-
-        persona = db.query(Persona).filter_by(rut=rut).first()
-        if persona:
-            db.delete(persona)
-            db.commit()
-
         return True
-
-    return False
-
+    except Exception as e:
+        db.rollback()
+        print(f"Error al crear usuario: {e}")
+        return False
 
 def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
     modelo = MODELOS.get(tipo)
@@ -54,27 +45,56 @@ def actualizar_usuario(db: Session, rut: str, tipo: str, nuevos_datos: dict):
         return usuario
     return None
 
-def crear_usuario(db, tipo, datos):
-    try:
-        usuario = FactoriUsuario.crear_usuario(tipo, datos)
-        db.add(usuario)
-        db.commit()
-        return True
-    except Exception as e:
-        db.rollback()
-        print(f"error al crear usuario: {e}")
+def eliminar_usuario(db: Session, rut: str, tipo: str):
+    modelo = MODELOS.get(tipo)
+    if not modelo:
         return False
+    usuario = db.query(modelo).filter_by(rut=rut).first()
+    if usuario:
+        db.delete(usuario)
+        db.commit()
+        # Eliminar también de Persona si existe
+        persona = db.query(Persona).filter_by(rut=rut).first()
+        if persona:
+            db.delete(persona)
+            db.commit()
+        return True
+    return False
 
-def obtener_admin_por_rut(db, rut):
+# --- Métodos específicos por tipo de usuario ---
+def obtener_admin_por_rut(db: Session, rut: str):
     return db.query(Admin).filter_by(rut=rut).first()
 
-def obtener_veterinario_por_rut(db, rut):
+def obtener_veterinario_por_rut(db: Session, rut: str):
     return db.query(Veterinario).filter_by(rut=rut).first()
 
-def obtener_recepcionista_por_rut(db, rut):
+def obtener_recepcionista_por_rut(db: Session, rut: str):
     return db.query(Recepcionista).filter_by(rut=rut).first()
 
-def crear_mascota(db, nombre, id_cliente, especie, raza, edad):
+def obtener_cliente_por_rut(db: Session, rut: str):
+    return db.query(Cliente).filter(Cliente.rut == rut).first()
+
+def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, email=""):
+    try:
+        nuevo_cliente = Cliente(
+            rut=rut,
+            nombre=nombre,
+            apellido=apellido,
+            edad=edad,
+            email=email,
+            tipo="cliente"
+        )
+        db.add(nuevo_cliente)
+        db.commit()
+        db.refresh(nuevo_cliente)
+        return nuevo_cliente
+    except Exception as e:
+        db.rollback()
+        print(f"Error al crear cliente: {e}")
+        return None
+
+# --- CRUD de Mascotas ---
+def crear_mascota(db: Session, nombre, id_cliente, especie, raza, edad):
     nueva_mascota = Mascota(
         nombre=nombre,
         id_cliente=id_cliente,
@@ -87,10 +107,34 @@ def crear_mascota(db, nombre, id_cliente, especie, raza, edad):
     db.refresh(nueva_mascota)
     return nueva_mascota
 
-def obtener_mascota_por_nombre(db, nombre):
+def obtener_mascota_por_nombre(db: Session, nombre: str):
     return db.query(Mascota).filter(Mascota.nombre == nombre).first()
 
-def crear_consulta(db, fecha_hora: datetime, id_recepcionista: int, id_mascota: int, id_vet: int, id_cliente: int, motivo: str):
+def obtener_mascotas_por_id(db: Session, mascota_id: int):
+    return db.query(Mascota).filter(Mascota.id == mascota_id).first()
+
+def actualizar_mascota(db: Session, chapa: int, nombre: str, edad: int, peso: float, altura: float):
+    mascota = db.query(Mascota).filter(Mascota.id == chapa).first()
+    if mascota:
+        mascota.nombre = nombre
+        mascota.edad = edad
+        mascota.peso = peso
+        mascota.altura = altura
+        db.commit()
+        db.refresh(mascota)
+        return mascota
+    return None
+
+def eliminar_mascota(db: Session, mascota_id: int):
+    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
+    if mascota:
+        db.delete(mascota)
+        db.commit()
+        return True
+    return False
+
+# --- CRUD de Consultas ---
+def crear_consulta(db: Session, fecha_hora: datetime, id_recepcionista: int, id_mascota: int, id_vet: int, id_cliente: int, motivo: str):
     consulta = Consulta(
         fecha_hora=fecha_hora,
         id_recepcionista=id_recepcionista,
@@ -104,31 +148,7 @@ def crear_consulta(db, fecha_hora: datetime, id_recepcionista: int, id_mascota: 
     db.refresh(consulta)
     return consulta
 
-def eliminar_mascota(db, mascota_id):
-    mascota = db.query(Mascota).filter(Mascota.id == mascota_id).first()
-    if mascota:
-        db.delete(mascota)
-        db.commit()
-        return True
-    return False
-
-def actualizar_mascota(db, chapa, nombre, edad, peso, altura):
-    mascota = db.query(Mascota).filter(Mascota.id == chapa).first()
-    if mascota:
-        mascota.nombre = nombre
-        mascota.edad = edad
-        mascota.peso = peso
-        mascota.altura = altura
-        db.commit()
-        db.refresh(mascota)
-        return mascota
-    return None
-
-def obtener_mascotas_por_id(db, mascota_id):
-    return db.query(Mascota).filter(Mascota.id == mascota_id).first()
-
-
-def eliminar_consulta(db, consulta_id: int):
+def eliminar_consulta(db: Session, consulta_id: int):
     consulta = db.query(Consulta).filter(Consulta.id_consulta == consulta_id).first()
     if consulta:
         db.delete(consulta)
@@ -136,7 +156,7 @@ def eliminar_consulta(db, consulta_id: int):
         return True
     return False
 
-def actualizar_consulta(db, consulta_id: int, nuevos_datos: dict):
+def actualizar_consulta(db: Session, consulta_id: int, nuevos_datos: dict):
     consulta = db.query(Consulta).filter(Consulta.id_consulta == consulta_id).first()
     if consulta:
         for key, value in nuevos_datos.items():
@@ -146,34 +166,17 @@ def actualizar_consulta(db, consulta_id: int, nuevos_datos: dict):
         return consulta
     return None
 
+def obtener_todos_los_clientes(db: Session):
+    return db.query(Cliente).all()
 
-def obtener_cliente_por_rut(db, rut):
-    return db.query(Cliente).filter(Cliente.rut == rut).first()
+def obtener_mascotas_de_cliente(db: Session, id_cliente: int):
+    return db.query(Mascota).filter(Mascota.id_cliente == id_cliente).all()
 
-def crear_cliente(db, rut, nombre="", apellido="", edad=None, email=""):
-    try:
-        nuevo_cliente = Cliente(
-            rut=rut,
-            nombre=nombre,
-            apellido=apellido,
-            edad=edad,
-            email=email,
-            tipo="cliente"  
-        )
-        db.add(nuevo_cliente)
-        db.commit()
-        db.refresh(nuevo_cliente)
-        return nuevo_cliente
-    except Exception as e:
-        db.rollback()
-        print(f"Error al crear cliente: {e}")
+def actualizar_estado_mascota(db: Session, id_mascota: int, nuevo_estado: str):
+    mascota = db.query(Mascota).filter(Mascota.id_mascota == id_mascota).first()
+    if not mascota:
         return None
-    
-def obtener_admin_por_rut(db, rut):
-    return db.query(Admin).filter_by(rut=rut).first()
-
-def obtener_veterinario_por_rut(db, rut):
-    return db.query(Veterinario).filter_by(rut=rut).first()
-
-def obtener_recepcionista_por_rut(db, rut):
-    return db.query(Recepcionista).filter_by(rut=rut).first()
+    mascota.estado = nuevo_estado
+    db.commit()
+    db.refresh(mascota)
+    return mascota
