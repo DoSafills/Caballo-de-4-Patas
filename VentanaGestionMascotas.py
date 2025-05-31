@@ -13,6 +13,16 @@ class VentanaGestionMascotas:
 
         ctk.CTkLabel(self.window, text="Gestión de Mascotas", font=("Arial", 18, "bold")).pack(pady=20)
 
+        # Entrada para buscar por ID de mascota
+        buscar_frame = ctk.CTkFrame(self.window)
+        buscar_frame.pack(pady=10)
+
+        self.id_mascota_buscar = ctk.StringVar()
+
+        ctk.CTkLabel(buscar_frame, text="ID Mascota:").pack(side="left", padx=5)
+        ctk.CTkEntry(buscar_frame, textvariable=self.id_mascota_buscar, width=100).pack(side="left", padx=5)
+        ctk.CTkButton(buscar_frame, text="Buscar", command=self.buscar_por_id, fg_color="#2980b9").pack(side="left", padx=5)
+
         columnas = ("id", "nombre", "raza", "edad", "sexo", "estado")
 
         self.tree = ttk.Treeview(self.window, columns=columnas, show="headings", height=10)
@@ -49,6 +59,30 @@ class VentanaGestionMascotas:
         ctk.CTkButton(boton_frame, text="Cerrar", command=self.window.destroy, fg_color="#7f8c8d", text_color="white").pack(side="left", padx=10)
 
         self.mostrar_mascotas()
+
+    def buscar_por_id(self):
+        id_str = self.id_mascota_buscar.get().strip()
+        if not id_str.isdigit():
+            messagebox.showwarning("Entrada inválida", "Por favor ingrese un ID numérico.")
+            return
+
+        id_buscar = int(id_str)
+        mascota = self.controller.db.query(self.controller.model_class).get(id_buscar)
+
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        if mascota:
+            self.tree.insert("", "end", values=(
+                mascota.id_mascota,
+                mascota.nombre,
+                mascota.raza,
+                mascota.edad,
+                mascota.sexo,
+                mascota.estado
+            ))
+        else:
+            messagebox.showinfo("Sin resultados", f"No se encontró ninguna mascota con ID {id_buscar}.")
 
     def mostrar_mascotas(self):
         for item in self.tree.get_children():
