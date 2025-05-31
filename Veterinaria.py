@@ -42,8 +42,7 @@ class VeterinariaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Registro de Mascotas")
-        self.root.geometry("1800x1020")
-        self.root.resizable(False, False)
+        self.root.geometry("1024x768")
         self.root.configure(bg="#f7f7f7")
         self.controller = MascotaController(db, MascotaFactory)
 
@@ -77,7 +76,7 @@ class VeterinariaApp:
         ctk.CTkLabel(container, text="Precio de la consulta: S/. 50.00", font=("Arial", 14), text_color="#555").pack(pady=(0, 20))
 
         
-               # Marco principal dividido en navegación y contenido
+        # Marco principal dividido en navegación y contenido
         main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(fill="both", expand=True)
 
