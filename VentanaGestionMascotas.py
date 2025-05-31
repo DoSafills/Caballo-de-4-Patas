@@ -28,16 +28,8 @@ class VentanaGestionMascotas:
         form_frame = ctk.CTkFrame(self.window)
         form_frame.pack(pady=10, padx=20, fill="x")
 
-        self.edad_var = ctk.StringVar()
-        self.sexo_var = ctk.StringVar()
         self.estado_var = ctk.StringVar()
         self.historial_nuevo_var = ctk.StringVar()
-
-        ctk.CTkLabel(form_frame, text="Edad").pack(anchor="w")
-        ctk.CTkEntry(form_frame, textvariable=self.edad_var).pack(fill="x", pady=5)
-
-        ctk.CTkLabel(form_frame, text="Sexo").pack(anchor="w")
-        ctk.CTkComboBox(form_frame, values=["Macho", "Hembra"], variable=self.sexo_var, state="readonly").pack(fill="x", pady=5)
 
         ctk.CTkLabel(form_frame, text="Estado Médico").pack(anchor="w")
         ctk.CTkComboBox(form_frame, values=["Alta", "Pendiente atención", "En tratamiento"], variable=self.estado_var, state="readonly").pack(fill="x", pady=5)
@@ -87,8 +79,6 @@ class VentanaGestionMascotas:
 
         mascota = self.controller.db.query(self.controller.model_class).get(self.id_mascota_seleccionada)
         if mascota:
-            self.edad_var.set(str(mascota.edad))
-            self.sexo_var.set(mascota.sexo)
             self.estado_var.set(mascota.estado)  # Esto puedes cargarlo si se guarda en BD más adelante
 
     def actualizar_mascota(self):
@@ -97,8 +87,6 @@ class VentanaGestionMascotas:
             return
 
         nuevos_datos = {
-            "edad": int(self.edad_var.get()),
-            "sexo": self.sexo_var.get(),
             "estado": self.estado_var.get()
             # Puedes guardar 'estado_var' si agregas ese campo en el modelo también
         }

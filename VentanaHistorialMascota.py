@@ -24,7 +24,7 @@ class VentanaHistorialMascota:
         ctk.CTkButton(entrada_frame, text="Buscar", command=self.mostrar_historial, fg_color="#2980b9").pack(side="left", padx=5)
 
         # Tabla de historial
-        columnas = ("id", "fecha", "descripcion")
+        columnas = ("fecha", "descripcion")
         self.tree = ttk.Treeview(self.window, columns=columnas, show="headings", height=10)
         for col in columnas:
             self.tree.heading(col, text=col.capitalize())
