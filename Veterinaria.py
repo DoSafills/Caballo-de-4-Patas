@@ -77,21 +77,15 @@ class VeterinariaApp:
 
         
         # Marco principal dividido en navegación y contenido
-        main_frame = ctk.CTkFrame(self.root)
-        main_frame.pack(fill="both", expand=True)
-
-
-        
-
+        main_frame = ctk.CTkFrame(container)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         nav_frame = ctk.CTkFrame(main_frame, width=200)
-        nav_frame.pack(side="left", fill="y", padx=10, pady=10)
+        nav_frame.pack(side="left", fill="y", padx=(0, 20))
 
-        form_frame = ctk.CTkFrame(container, fg_color="#ffffff")
-        form_frame.pack(padx=30, pady=20, fill="both")
+        form_frame = ctk.CTkFrame(main_frame, fg_color="#ffffff")
+        form_frame.pack(side="left", fill="both", expand=True)
 
-        form_frame.grid_columnconfigure(0, weight=1)
-        form_frame.grid_columnconfigure(1, weight=1)
 
 
     # Entradas tipo texto
