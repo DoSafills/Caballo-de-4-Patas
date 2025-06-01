@@ -68,23 +68,22 @@ class VeterinariaApp:
         self.main_card()
 
     def main_card(self):
-        container = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=20)
-        container.pack(pady=40, padx=40, fill="both")
+        container = ctk.CTkFrame(self.root, fg_color="#ffffff")
+        container.pack(pady=5, padx=10, fill="both")
 
-        ctk.CTkLabel(container, text="HOME PETS", font=("Arial", 20, "bold"), text_color="#000").pack(anchor="nw", pady=(15, 0), padx=20)
         ctk.CTkLabel(container, text="Asistencia de Reserva", font=("Arial", 22, "bold"), text_color="#000").pack(pady=(0, 5))
-        ctk.CTkLabel(container, text="Precio de la consulta: S/. 50.00", font=("Arial", 14), text_color="#555").pack(pady=(0, 20))
+        ctk.CTkLabel(container, text="Precio de la consulta: S/. 50.00", font=("Arial", 14), text_color="#555").pack(pady=(0, 5))
 
         
         # Marco principal dividido en navegación y contenido
         main_frame = ctk.CTkFrame(container)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
         nav_frame = ctk.CTkFrame(main_frame, width=200)
         nav_frame.pack(side="left", fill="y", padx=(0, 20))
 
-        form_frame = ctk.CTkFrame(main_frame, fg_color="#ffffff")
-        form_frame.pack(side="left", fill="both", expand=True)
+        form_frame = ctk.CTkScrollableFrame(main_frame, fg_color="#ffffff")
+        form_frame.pack(side="right", fill="both", expand=True)
 
 
 
@@ -99,14 +98,14 @@ class VeterinariaApp:
 
         for texto, var, placeholder in campos:
             ctk.CTkLabel(form_frame, text=texto, text_color="#555").pack(anchor="w")
-            ctk.CTkEntry(form_frame, textvariable=var, placeholder_text=placeholder, corner_radius=0).pack(fill="x", pady=4)
+            ctk.CTkEntry(form_frame, textvariable=var, placeholder_text=placeholder, corner_radius=0).pack(fill="x", pady=0)
 
         # ComboBoxes predefinidos
         ctk.CTkLabel(form_frame, text="Sexo", text_color="#555").pack(anchor="w")
-        ctk.CTkComboBox(form_frame, values=["Macho", "Hembra"], variable=self.sexo, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+        ctk.CTkComboBox(form_frame, values=["Macho", "Hembra"], variable=self.sexo, state="readonly", corner_radius=0).pack(fill="x", pady=2)
 
         ctk.CTkLabel(form_frame, text="Dieta", text_color="#555").pack(anchor="w")
-        ctk.CTkComboBox(form_frame, values=["Normal", "Especial", "Dietética"], variable=self.dieta, state="readonly", corner_radius=0).pack(fill="x", pady=4)
+        ctk.CTkComboBox(form_frame, values=["Normal", "Especial", "Dietética"], variable=self.dieta, state="readonly", corner_radius=0).pack(fill="x", pady=2)
 
         ctk.CTkLabel(form_frame, text="Carácter", text_color="#555").pack(anchor="w")
         ctk.CTkComboBox(form_frame, values=["Tranquilo", "Agresivo", "Juguetón", "Tímido"], variable=self.caracter, state="readonly", corner_radius=0).pack(fill="x", pady=4)
@@ -122,12 +121,12 @@ class VeterinariaApp:
         ctk.CTkComboBox(form_frame, values=self.vet_ids, variable=self.vet_seleccionado, state="readonly", corner_radius=0).pack(fill="x", pady=4)
 
         # Botones
-        boton_frame = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=0, border_width=1, border_color="#cccccc")
-        boton_frame.pack(pady=20)
+        # boton_frame = ctk.CTkFrame(self.root, fg_color="#ffffff", corner_radius=0, border_width=1, border_color="#cccccc")
+        # boton_frame.pack(pady=20)
 
         ctk.CTkLabel(nav_frame, text="Menú", font=("Arial", 16, "bold")).pack(pady=10)
-        ctk.CTkButton(boton_frame, text="REGISTRAR", fg_color="#2c3e50", text_color="white",
-                    width=120, command=self.registrar_mascota, corner_radius=0).pack(side="left", padx=10)
+        ctk.CTkButton(form_frame, text="REGISTRAR", fg_color="#2c3e50", text_color="white",
+                    width=120, command=self.registrar_mascota, corner_radius=0).pack(pady=10)
         ctk.CTkButton(nav_frame, text="Gestionar Mascotas", command=self.abrir_gestion_ventana, fg_color="#2980b9", text_color="white").pack(pady=5, fill="x")
         ctk.CTkButton(nav_frame, text="Historial Médico", command=self.abrir_historial_ventana, fg_color="#8e44ad", text_color="white").pack(pady=5, fill="x")
 
