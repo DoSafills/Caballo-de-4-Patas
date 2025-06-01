@@ -75,10 +75,10 @@ class Mascota(Base):
     edad = Column(Integer)
     peso = Column(String)
     altura = Column(String)
-    id_vet = Column(Integer, ForeignKey('veterinario.id_vet'), nullable=True)
+    
     estado = Column(String, default="Pendiente atención")
  
-    veterinario = relationship("Veterinario")
+ 
     historiales = relationship("HistorialMedico", back_populates="mascota")
 
 class HistorialMedico(Base):
