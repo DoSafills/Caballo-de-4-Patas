@@ -29,20 +29,23 @@ class MascotaFactory:
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-# Ruta al directorio actual
+## Ruta al directorio actual
 current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-db_path = os.path.join(parent_dir, "veterinaria.db")
+
+# Ruta a la base de datos en la misma carpeta
+db_path = os.path.join(current_dir, "veterinaria.db")
+
+# Configuración del motor y sesión
 engine = create_engine(f"sqlite:///{db_path}")
 Session = sessionmaker(bind=engine)
 db = Session()
-create_tables(engine)
+
 
 class VeterinariaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Registro de Mascotas")
-        self.root.geometry("1800x1020")
+        self.root.geometry("1890x1620")
         self.root.resizable(False, False)
         self.root.configure(bg="#f7f7f7")
         self.controller = MascotaController(db, MascotaFactory)
