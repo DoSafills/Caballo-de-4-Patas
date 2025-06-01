@@ -10,10 +10,10 @@ db: Session = SessionLocal()
 # Crear un cliente
 
 admin_data = {
-    "rut": "111111-1",
+    "rut": "admin",
     "nombre": "admin",
     "apellido": "admin",
-    "edad": 1,
+    "edad": 0,
     "email": "adminadmin",
     "tipo": "admin",
     "id_admin": 1,

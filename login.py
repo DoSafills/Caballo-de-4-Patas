@@ -5,7 +5,7 @@ from strategyBusqueda import BusquedaPorRut
 from contextStrategy import ContextoBusqueda
 from models import Admin, Veterinario, Recepcionista
 from Veterinaria import VeterinariaApp
-from recepcionistaApp import GestionHorasApp
+from RecepcionistaApp import GestionHorasApp
 from adminApp import AdminApp
 import inicio
 

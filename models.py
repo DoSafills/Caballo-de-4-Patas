@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.ext.declarative import declared_attr
-
+import datetime
 Base = declarative_base()
 
 class Persona(Base):
@@ -63,19 +63,30 @@ class Veterinario(Persona):
 
 class Mascota(Base):
     __tablename__ = 'mascota'
-    id_mascota = Column(Integer, primary_key=True)
-    nombre = Column(String(255))
-    raza = Column(String(255))
-    sexo = Column(String(255))
-    dieta = Column(String(255))
-    caracter = Column(String(255))
-    habitat = Column(String(255))
-    id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
-    edad = Column(Integer)
-    peso = Column(String(255))
-    altura = Column(String(255))
 
+    id_mascota = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String)
+    raza = Column(String)
+    sexo = Column(String)
+    dieta = Column(String)
+    caracter = Column(String)
+    habitat = Column(String)
+    edad = Column(Integer)
+    peso = Column(String)
+    altura = Column(String)
+    id_vet = Column(Integer, ForeignKey('veterinario.id_vet'), nullable=True)
+    estado = Column(String, default="Pendiente atención")
+ 
     veterinario = relationship("Veterinario")
+    historiales = relationship("HistorialMedico", back_populates="mascota")
+class HistorialMedico(Base):
+    __tablename__ = "historial_medico"
+    id_historial = Column(Integer, primary_key=True, autoincrement=True)
+    fecha = Column(Date, default=datetime.date.today)
+    descripcion = Column(String, nullable=False)
+    id_mascota = Column(Integer, ForeignKey("mascota.id_mascota"))
+
+    mascota = relationship("Mascota", back_populates="historiales")
 
 class Consulta(Base):
     __tablename__ = 'consulta'
