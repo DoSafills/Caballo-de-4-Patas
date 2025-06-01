@@ -2,6 +2,14 @@ import customtkinter as ctk
 from tkinter import messagebox
 from tkinter import ttk
 
+class GestionMascotaFactory:
+    @staticmethod
+    def crear(estado, historial):
+        return {
+            "estado": estado,
+            "historial": historial
+        }
+
 class VentanaGestionMascotas:
     def __init__(self, root, controller):
         self.root = root

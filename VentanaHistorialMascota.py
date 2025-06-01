@@ -3,6 +3,13 @@ from tkinter import messagebox
 from tkinter import ttk
 import datetime
 
+class HistorialMascotaFactory:
+    @staticmethod
+    def crear(descripcion):
+        return {
+            "descripcion": descripcion
+        }
+
 class VentanaHistorialMascota:
     def __init__(self, root, controller):
         self.root = root
