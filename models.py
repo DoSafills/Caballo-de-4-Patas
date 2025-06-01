@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import Column, Integer, String, ForeignKey, Date
 import datetime
 Base = declarative_base()
 
@@ -79,6 +80,7 @@ class Mascota(Base):
  
     veterinario = relationship("Veterinario")
     historiales = relationship("HistorialMedico", back_populates="mascota")
+
 class HistorialMedico(Base):
     __tablename__ = "historial_medico"
     id_historial = Column(Integer, primary_key=True, autoincrement=True)
@@ -88,10 +90,10 @@ class HistorialMedico(Base):
 
     mascota = relationship("Mascota", back_populates="historiales")
 
+
 class Consulta(Base):
     __tablename__ = 'consulta'
     id_consulta = Column(Integer, primary_key=True)
-    fecha_hora = Column(DateTime)
     id_recepcionista = Column(Integer, ForeignKey('recepcionista.id_recepcionista'))
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
     id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
