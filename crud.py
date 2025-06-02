@@ -87,7 +87,7 @@ def obtener_recepcionista_por_rut(db: Session, rut: str):
 def obtener_cliente_por_rut(db: Session, rut: str):
     return db.query(Cliente).filter(Cliente.rut == rut).first()
 
-def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, email=""):
+def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, email="", rut_vet_preferido=""):
     try:
         nuevo_cliente = Cliente(
             rut=rut,
@@ -95,6 +95,8 @@ def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, emai
             apellido=apellido,
             edad=edad,
             email=email,
+            rut_vet_preferido=rut_vet_preferido,
+            
             tipo="cliente"
         )
         db.add(nuevo_cliente)

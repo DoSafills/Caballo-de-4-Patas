@@ -10,7 +10,7 @@ from crud import (
 )
 from database import SessionLocal
 from datetime import datetime
-from models import Consulta
+from models import Consulta, Cliente, Mascota, Veterinario, Recepcionista
 from factories import VentanaFactory
 from controller import MascotaController  # <-- Controlador
 
@@ -92,6 +92,8 @@ class GestionHorasApp:
         self.cliente_apellido_entry = self._crear_campo_cliente("Apellido:", self.cliente_frame)
         self.cliente_edad_entry = self._crear_campo_cliente("Edad:", self.cliente_frame)
         self.cliente_email_entry = self._crear_campo_cliente("Email:", self.cliente_frame)
+        self.cliente_vet_entry = self._crear_campo_cliente("ID Vet Preferido (opcional):", self.cliente_frame)
+
 
         self.boton_crear_cliente = ctk.CTkButton(self.cliente_frame, text="Crear Cliente", command=self.crear_cliente_desde_formulario)
         self.boton_crear_cliente.pack(pady=10)
@@ -131,10 +133,19 @@ class GestionHorasApp:
         apellido = self.cliente_apellido_entry.get().strip()
         edad = self.cliente_edad_entry.get().strip()
         email = self.cliente_email_entry.get().strip()
+        vet_preferido = self.cliente_vet_entry.get().strip()
 
-        if not all([rut, nombre, apellido, edad, email]):
+        if not all([rut, nombre, apellido, edad, email, vet_preferido]):
             messagebox.showerror("Error", "Todos los campos del cliente son obligatorios.")
             return
+        
+        rut_vet = None
+        if vet_preferido:
+            vet = obtener_veterinario_por_rut(self.db, vet_preferido)
+            if vet:
+                rut_vet = vet.rut
+            else:
+                messagebox.showwarning("Advertencia", "Veterinario preferido no encontrado. Se guardará sin preferencia.")
 
         try:
             edad = int(edad)
@@ -142,10 +153,10 @@ class GestionHorasApp:
             messagebox.showerror("Error", "La edad debe ser un número.")
             return
 
-        cliente = crear_cliente(self.db, rut, nombre, apellido, edad, email)
+        cliente = crear_cliente(self.db, rut, nombre, apellido, edad, email, rut_vet)
         if cliente:
             messagebox.showinfo("Éxito", "Cliente creado correctamente.")
-            for entry in [self.cliente_rut_entry, self.cliente_nombre_entry, self.cliente_apellido_entry, self.cliente_edad_entry, self.cliente_email_entry]:
+            for entry in [self.cliente_rut_entry, self.cliente_nombre_entry, self.cliente_apellido_entry, self.cliente_edad_entry, self.cliente_email_entry,self.cliente_vet_entry]:
                 entry.delete(0, tk.END)
         else:
             messagebox.showerror("Error", "No se pudo crear el cliente.")
