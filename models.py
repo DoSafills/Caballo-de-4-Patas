@@ -41,14 +41,10 @@ class Recepcionista(Persona):
 class Cliente(Persona):
     __tablename__ = 'cliente'
     id_cliente = Column(Integer, primary_key=True)
-    id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    mascotas = relationship("Mascota", back_populates="cliente")
+    __mapper_args__ = {'polymorphic_identity': 'cliente'}
 
-    mascota = relationship("Mascota")
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'cliente',
-    }
 
 class Veterinario(Persona):
     __tablename__ = 'veterinario'
@@ -74,8 +70,11 @@ class Mascota(Base):
     edad = Column(Integer)
     peso = Column(String(255))
     altura = Column(String(255))
-
+    estado = Column(String(50), nullable=False, default="saludable")  
     veterinario = relationship("Veterinario")
+
+    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
+    cliente = relationship("Cliente", back_populates="mascotas")  
 
 class Consulta(Base):
     __tablename__ = 'consulta'
