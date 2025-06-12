@@ -1,12 +1,35 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import messagebox
-from crud import crear_consulta, eliminar_consulta, actualizar_consulta, obtener_cliente_por_rut, obtener_mascota_por_nombre, obtener_veterinario_por_rut, obtener_recepcionista_por_rut
+from tkinter import messagebox, simpledialog
+from crud import (
+    crear_consulta, eliminar_consulta, actualizar_consulta,
+    obtener_cliente_por_rut, obtener_mascota_por_nombre,
+    obtener_veterinario_por_rut, obtener_recepcionista_por_rut,
+    crear_cliente,
+    obtener_todos_los_clientes, obtener_mascotas_de_cliente, actualizar_estado_mascota
+)
 from database import SessionLocal
 from datetime import datetime
-from models import Consulta
-import crud
+from models import Consulta, Cliente, Mascota, Veterinario, Recepcionista
+from factories import VentanaFactory
+from controller import MascotaController  # <-- Controlador
 
+#  FACTORY
+class MascotaFactory:
+    @staticmethod
+    def crear(nombre, raza, sexo, dieta, caracter, habitat, edad, peso, altura, id_vet):
+        return {
+            "nombre": nombre,
+            "raza": raza,
+            "sexo": sexo,
+            "dieta": dieta,
+            "caracter": caracter,
+            "habitat": habitat,
+            "edad": int(edad),
+            "peso": peso,
+            "altura": altura,
+            "id_vet": id_vet
+        }
 # Activar modo oscuro
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -17,22 +40,27 @@ class GestionHorasApp:
         self.root = root
         self.root.title("Panel Recepcionista")
         self.root.geometry("950x600")
+        self.controller = MascotaController(self.db, MascotaFactory)
 
         ctk.CTkLabel(root, text="Panel Recepcionista", font=("Arial", 20)).pack(pady=20)
 
-        # Frame contenedor
+        # Frame principal
         self.main_frame = ctk.CTkFrame(root)
         self.main_frame.pack(pady=10, padx=20, fill="both", expand=True)
 
-        # Frame agendar horas
+        # Frame para agendar horas
         self.form_frame = ctk.CTkFrame(self.main_frame)
         self.form_frame.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
-        # Frame crear cliente
+        # Frame para crear cliente
         self.cliente_frame = ctk.CTkFrame(self.main_frame)
         self.cliente_frame.grid(row=0, column=1, padx=10, pady=10, sticky="n")
 
-        # Formulario agendar horas
+        # Frame para ver clientes y mascotas
+        self.ver_frame = ctk.CTkFrame(self.main_frame)
+        self.ver_frame.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+
+        # Formulario de agendamiento
         self.rut_cliente_entry = self._crear_campo("RUT del Cliente:", 0)
         self.nombre_mascota_entry = self._crear_campo("Nombre de la Mascota:", 1)
         self.rut_veterinario_entry = self._crear_campo("RUT del Veterinario:", 2)
@@ -56,7 +84,7 @@ class GestionHorasApp:
         self.listbox.pack(pady=10)
         self.listbox.bind("<<ListboxSelect>>", self.seleccionar_hora)
 
-        # Formulario crear cliente
+        # Formulario para crear cliente
         ctk.CTkLabel(self.cliente_frame, text="Crear Cliente", font=("Arial", 16)).pack(pady=10)
 
         self.cliente_rut_entry = self._crear_campo_cliente("RUT:", self.cliente_frame)
@@ -64,11 +92,28 @@ class GestionHorasApp:
         self.cliente_apellido_entry = self._crear_campo_cliente("Apellido:", self.cliente_frame)
         self.cliente_edad_entry = self._crear_campo_cliente("Edad:", self.cliente_frame)
         self.cliente_email_entry = self._crear_campo_cliente("Email:", self.cliente_frame)
+        self.cliente_vet_entry = self._crear_campo_cliente("ID Vet Preferido (opcional):", self.cliente_frame)
+
 
         self.boton_crear_cliente = ctk.CTkButton(self.cliente_frame, text="Crear Cliente", command=self.crear_cliente_desde_formulario)
         self.boton_crear_cliente.pack(pady=10)
 
+        # Botón “Ver Clientes”
+        self.boton_ver_clientes = ctk.CTkButton(self.ver_frame, text="Ver Clientes", command=self.mostrar_clientes)
+        self.boton_ver_clientes.pack(pady=5)
+
+        # Listbox de clientes
+        self.listbox_clientes = tk.Listbox(self.ver_frame, height=8, width=40)
+        self.listbox_clientes.pack(pady=5)
+        self.listbox_clientes.bind("<<ListboxSelect>>", self.seleccionar_cliente)
+
+        # Listbox para mostrar mascotas de ese cliente (y su estado)
+        self.listbox_mascotas = tk.Listbox(self.ver_frame, height=8, width=40)
+        self.listbox_mascotas.pack(pady=5)
+        self.listbox_mascotas.bind("<<ListboxSelect>>", self.seleccionar_mascota)
+
         self.cargar_horas()
+        ctk.CTkButton(self.ver_frame, text="Gestionar Mascotas", command=self.abrir_gestion_ventana, fg_color="#2980b9", text_color="white").pack(pady=5, fill="x")
 
     def _crear_campo(self, label, row):
         ctk.CTkLabel(self.form_frame, text=label).grid(row=row, column=0, padx=10, pady=5, sticky="e")
@@ -88,10 +133,19 @@ class GestionHorasApp:
         apellido = self.cliente_apellido_entry.get().strip()
         edad = self.cliente_edad_entry.get().strip()
         email = self.cliente_email_entry.get().strip()
+        vet_preferido = self.cliente_vet_entry.get().strip()
 
-        if not all([rut, nombre, apellido, edad, email]):
+        if not all([rut, nombre, apellido, edad, email, vet_preferido]):
             messagebox.showerror("Error", "Todos los campos del cliente son obligatorios.")
             return
+        
+        rut_vet = None
+        if vet_preferido:
+            vet = obtener_veterinario_por_rut(self.db, vet_preferido)
+            if vet:
+                rut_vet = vet.rut
+            else:
+                messagebox.showwarning("Advertencia", "Veterinario preferido no encontrado. Se guardará sin preferencia.")
 
         try:
             edad = int(edad)
@@ -99,26 +153,24 @@ class GestionHorasApp:
             messagebox.showerror("Error", "La edad debe ser un número.")
             return
 
-        cliente = crud.crear_cliente(self.db, rut, nombre, apellido, edad, email)
+        cliente = crear_cliente(self.db, rut, nombre, apellido, edad, email, rut_vet)
         if cliente:
             messagebox.showinfo("Éxito", "Cliente creado correctamente.")
-            self.cliente_rut_entry.delete(0, tk.END)
-            self.cliente_nombre_entry.delete(0, tk.END)
-            self.cliente_apellido_entry.delete(0, tk.END)
-            self.cliente_edad_entry.delete(0, tk.END)
-            self.cliente_email_entry.delete(0, tk.END)
+            for entry in [self.cliente_rut_entry, self.cliente_nombre_entry, self.cliente_apellido_entry, self.cliente_edad_entry, self.cliente_email_entry,self.cliente_vet_entry]:
+                entry.delete(0, tk.END)
         else:
             messagebox.showerror("Error", "No se pudo crear el cliente.")
 
     def agendar_hora(self):
         rut_cliente = self.rut_cliente_entry.get().strip()
+        nombre_mascota = self.nombre_mascota_entry.get().strip()
         rut_vet = self.rut_veterinario_entry.get().strip()
         rut_recep = self.rut_recepcionista_entry.get().strip()
         fecha = self.fecha_entry.get().strip()
         hora = self.hora_entry.get().strip()
         motivo = self.motivo_entry.get().strip()
 
-        if not all([rut_cliente, rut_vet, rut_recep, fecha, hora, motivo]):
+        if not all([rut_cliente, nombre_mascota, rut_vet, rut_recep, fecha, hora, motivo]):
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
             return
 
@@ -133,7 +185,11 @@ class GestionHorasApp:
             messagebox.showerror("Error", "Cliente no encontrado. Debes crearlo primero.")
             return
 
-        id_mascota = 1  # Por defecto
+        mascota = obtener_mascota_por_nombre(self.db, nombre_mascota)
+        if not mascota:
+            messagebox.showerror("Error", "Mascota no encontrada.")
+            return
+
         vet = obtener_veterinario_por_rut(self.db, rut_vet)
         if not vet:
             messagebox.showerror("Error", "Veterinario no encontrado.")
@@ -144,75 +200,93 @@ class GestionHorasApp:
             messagebox.showerror("Error", "Recepcionista no encontrado.")
             return
 
+        consulta = Consulta(
+            id_cliente=cliente.id,
+            id_mascota=mascota.id,
+            id_veterinario=vet.id,
+            id_recepcionista=recepcionista.id,
+            fecha_hora=fecha_hora,
+            motivo=motivo
+        )
+        crear_consulta(self.db, consulta)
+        messagebox.showinfo("Éxito", "Hora agendada correctamente.")
+        self.limpiar_campos_formulario()
+        self.cargar_horas()
+
+    def actualizar_hora(self):
         try:
-            crear_consulta(
-                self.db,
-                    fecha_hora=fecha_hora,
-                    id_recepcionista= recepcionista.id_recepcionista,
-                    id_mascota=id_mascota,
-                    id_vet=vet.id_vet,
-                    id_cliente=cliente.id_cliente,
-                    motivo=motivo
-            )
-            messagebox.showinfo("Éxito", "Hora agendada correctamente.")
+            seleccion = self.listbox.curselection()
+            if not seleccion:
+                messagebox.showerror("Error", "Debes seleccionar una hora para actualizar.")
+                return
+
+            index = seleccion[0]
+            consulta = self.horas_data[index]
+
+            rut_cliente = self.rut_cliente_entry.get().strip()
+            nombre_mascota = self.nombre_mascota_entry.get().strip()
+            rut_vet = self.rut_veterinario_entry.get().strip()
+            rut_recep = self.rut_recepcionista_entry.get().strip()
+            fecha = self.fecha_entry.get().strip()
+            hora = self.hora_entry.get().strip()
+            motivo = self.motivo_entry.get().strip()
+
+            if not all([rut_cliente, nombre_mascota, rut_vet, rut_recep, fecha, hora, motivo]):
+                messagebox.showerror("Error", "Todos los campos son obligatorios.")
+                return
+
+            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
+
+            cliente = obtener_cliente_por_rut(self.db, rut_cliente)
+            mascota = obtener_mascota_por_nombre(self.db, nombre_mascota)
+            vet = obtener_veterinario_por_rut(self.db, rut_vet)
+            recepcionista = obtener_recepcionista_por_rut(self.db, rut_recep)
+
+            if not all([cliente, mascota, vet, recepcionista]):
+                messagebox.showerror("Error", "Uno o más datos no existen en la base de datos.")
+                return
+
+            consulta.id_cliente = cliente.id
+            consulta.id_mascota = mascota.id
+            consulta.id_veterinario = vet.id
+            consulta.id_recepcionista = recepcionista.id
+            consulta.fecha_hora = fecha_hora
+            consulta.motivo = motivo
+
+            actualizar_consulta(self.db, consulta)
+            messagebox.showinfo("Éxito", "Hora actualizada correctamente.")
+            self.limpiar_campos_formulario()
             self.cargar_horas()
+
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo agendar la hora: {e}")
+            messagebox.showerror("Error", f"Ocurrió un error: {e}")
 
     def eliminar_hora(self):
         seleccion = self.listbox.curselection()
         if not seleccion:
-            messagebox.showwarning("Atención", "Selecciona una hora para eliminar.")
+            messagebox.showerror("Error", "Debes seleccionar una hora para eliminar.")
             return
+
         index = seleccion[0]
         consulta = self.horas_data[index]
-
-        try:
-            eliminar_consulta(self.db, consulta.id_consulta)
-            messagebox.showinfo("Éxito", "Hora eliminada correctamente.")
-            self.cargar_horas()
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo eliminar la hora: {e}")
-
-    def actualizar_hora(self):
-        seleccion = self.listbox.curselection()
-        if not seleccion:
-            messagebox.showwarning("Atención", "Selecciona una hora para actualizar.")
-            return
-        index = seleccion[0]
-        consulta = self.horas_data[index]
-
-        fecha = self.fecha_entry.get()
-        hora = self.hora_entry.get()
-
-        if not all([fecha, hora]):
-            messagebox.showerror("Error", "Debes ingresar nueva fecha y hora.")
-            return
-
-        try:
-            fecha_hora = datetime.strptime(f"{fecha} {hora}", "%Y-%m-%d %H:%M")
-        except ValueError:
-            messagebox.showerror("Error", "Formato de fecha u hora inválido.")
-            return
-
-        nuevos_datos = {
-            "fecha_hora": fecha_hora,
-            "motivo": "Hora actualizada desde app"
-        }
-        try:
-            actualizar_consulta(self.db, consulta.id_consulta, nuevos_datos)
-            messagebox.showinfo("Éxito", "Hora actualizada correctamente.")
-            self.cargar_horas()
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo actualizar la hora: {e}")
+        eliminar_consulta(self.db, consulta)
+        messagebox.showinfo("Éxito", "Hora eliminada correctamente.")
+        self.limpiar_campos_formulario()
+        self.cargar_horas()
 
     def cargar_horas(self):
         self.listbox.delete(0, tk.END)
-        self.horas_data = self.db.query(Consulta).order_by(Consulta.fecha_hora).all()
-        for consulta in self.horas_data:
-            fecha_str = consulta.fecha_hora.strftime("%Y-%m-%d %H:%M")
-            item = f"{fecha_str} - Mascota ID: {consulta.id_mascota} - Cliente ID: {consulta.id_cliente} - Motivo: {consulta.motivo}"
-            self.listbox.insert(tk.END, item)
+        self.horas_data = []
+
+        consultas = self.db.query(Consulta).order_by(Consulta.fecha_hora).all()
+        for c in consultas:
+            display_text = f"ID: {c.id}, Cliente: {c.id_cliente}, Mascota: {c.id_mascota}, Vet: {c.id_veterinario}, Fecha y Hora: {c.fecha_hora}, Motivo: {c.motivo}"
+            self.listbox.insert(tk.END, display_text)
+            self.horas_data.append(c)
+
+    def limpiar_campos_formulario(self):
+        for entry in [self.rut_cliente_entry, self.nombre_mascota_entry, self.rut_veterinario_entry, self.rut_recepcionista_entry, self.fecha_entry, self.hora_entry, self.motivo_entry]:
+            entry.delete(0, tk.END)
 
     def seleccionar_hora(self, event):
         seleccion = self.listbox.curselection()
@@ -221,13 +295,72 @@ class GestionHorasApp:
         index = seleccion[0]
         consulta = self.horas_data[index]
 
+        cliente = self.db.query(obtener_cliente_por_rut).filter_by(id=consulta.id_cliente).first()
+        mascota = self.db.query(obtener_mascota_por_nombre).filter_by(id=consulta.id_mascota).first()
+        vet = self.db.query(obtener_veterinario_por_rut).filter_by(id=consulta.id_veterinario).first()
+        recepcionista = self.db.query(obtener_recepcionista_por_rut).filter_by(id=consulta.id_recepcionista).first()
+
+        self.rut_cliente_entry.delete(0, tk.END)
+        self.rut_cliente_entry.insert(0, cliente.rut if cliente else "")
+
+        self.nombre_mascota_entry.delete(0, tk.END)
+        self.nombre_mascota_entry.insert(0, mascota.nombre if mascota else "")
+
+        self.rut_veterinario_entry.delete(0, tk.END)
+        self.rut_veterinario_entry.insert(0, vet.rut if vet else "")
+
+        self.rut_recepcionista_entry.delete(0, tk.END)
+        self.rut_recepcionista_entry.insert(0, recepcionista.rut if recepcionista else "")
+
+        fecha_str = consulta.fecha_hora.strftime("%Y-%m-%d")
+        hora_str = consulta.fecha_hora.strftime("%H:%M")
+
         self.fecha_entry.delete(0, tk.END)
-        self.fecha_entry.insert(0, consulta.fecha_hora.strftime("%Y-%m-%d"))
+        self.fecha_entry.insert(0, fecha_str)
 
         self.hora_entry.delete(0, tk.END)
-        self.hora_entry.insert(0, consulta.fecha_hora.strftime("%H:%M"))
+        self.hora_entry.insert(0, hora_str)
 
-# Ejecutar la app
+        self.motivo_entry.delete(0, tk.END)
+        self.motivo_entry.insert(0, consulta.motivo)
+
+    def mostrar_clientes(self):
+        self.listbox_clientes.delete(0, tk.END)
+        clientes = obtener_todos_los_clientes(self.db)
+        for cliente in clientes:
+            self.listbox_clientes.insert(tk.END, f"{cliente.rut} - {cliente.nombre} {cliente.apellido}")
+
+    def seleccionar_cliente(self, event):
+        seleccion = self.listbox_clientes.curselection()
+        if not seleccion:
+            return
+        index = seleccion[0]
+        cliente_str = self.listbox_clientes.get(index)
+        rut_cliente = cliente_str.split(" - ")[0]
+
+        mascotas = obtener_mascotas_de_cliente(self.db, rut_cliente)
+        self.listbox_mascotas.delete(0, tk.END)
+        for mascota in mascotas:
+            self.listbox_mascotas.insert(tk.END, f"{mascota.nombre} - Estado: {mascota.estado}")
+
+    def seleccionar_mascota(self, event):
+        seleccion = self.listbox_mascotas.curselection()
+        if not seleccion:
+            return
+        index = seleccion[0]
+        mascota_str = self.listbox_mascotas.get(index)
+        nombre_mascota = mascota_str.split(" - ")[0]
+
+        # Aquí preguntar si desea cambiar el estado
+        nuevo_estado = simpledialog.askstring("Actualizar Estado", f"Ingrese nuevo estado para {nombre_mascota}:")
+        if nuevo_estado:
+            actualizar_estado_mascota(self.db, nombre_mascota, nuevo_estado)
+            messagebox.showinfo("Éxito", f"Estado de {nombre_mascota} actualizado a {nuevo_estado}.")
+            # Actualizar lista de mascotas
+            self.mostrar_clientes()
+    def abrir_gestion_ventana(self):
+        VentanaFactory.crear("gestion", self.root, self.controller)
+
 if __name__ == "__main__":
     root = ctk.CTk()
     app = GestionHorasApp(root)
