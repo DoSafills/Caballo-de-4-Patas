@@ -85,10 +85,17 @@ def obtener_recepcionista_por_rut(db: Session, rut: str):
     return db.query(Recepcionista).filter_by(rut=rut).first()
 
 def obtener_cliente_por_rut(db: Session, rut: str):
-    return db.query(Cliente).filter(Cliente.rut == rut).first()
-
+    cliente = db.query(Cliente).filter(Cliente.rut == rut).first()
+    if cliente is None:
+        logger.warning(f"No se encontró cliente con RUT {rut}.")
+    return cliente
 def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, email=""):
     try:
+        # Verificar si el cliente ya existe
+        if db.query(Cliente).filter(Cliente.rut == rut).first():
+            logger.warning(f"Cliente con RUT {rut} ya existe.")
+            return None
+
         nuevo_cliente = Cliente(
             rut=rut,
             nombre=nombre,
@@ -105,10 +112,15 @@ def crear_cliente(db: Session, rut: str, nombre="", apellido="", edad=None, emai
         db.rollback()
         logger.error(f"Error al crear cliente: {e}")
         return None
-
+    
 # --- CRUD de Mascotas ---
 def crear_mascota(db: Session, nombre, id_cliente, especie, raza, edad):
     try:
+        # Verificar si la mascota ya existe (en este caso, por nombre)
+        if db.query(Mascota).filter(Mascota.nombre == nombre, Mascota.id_cliente == id_cliente).first():
+            logger.warning(f"Ya existe una mascota con el nombre {nombre} para el cliente con ID {id_cliente}.")
+            return None
+        
         nueva_mascota = Mascota(
             nombre=nombre,
             id_cliente=id_cliente,
@@ -126,8 +138,10 @@ def crear_mascota(db: Session, nombre, id_cliente, especie, raza, edad):
         return None
 
 def obtener_mascota_por_nombre(db: Session, nombre: str):
-    return db.query(Mascota).filter(Mascota.nombre == nombre).first()
-
+    mascota = db.query(Mascota).filter(Mascota.nombre == nombre).first()
+    if mascota is None:
+        logger.warning(f"No se encontró mascota con el nombre {nombre}.")
+    return mascota
 def obtener_mascotas_por_id(db: Session, mascota_id: int):
     return db.query(Mascota).filter(Mascota.id == mascota_id).first()
 
