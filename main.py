@@ -64,3 +64,27 @@ def crear_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db))
 @app.get("/clientes", response_model=list[schemas.ClienteResponse])
 def obtener_clientes(db: Session = Depends(get_db)):
     return db.query(models.Cliente).all()
+
+@app.post("/veterinarios", response_model=schemas.VeterinarioResponse)
+def crear_veterinario(vet: schemas.VeterinarioCreate, db: Session = Depends(get_db)):
+    nuevo = models.Veterinario(**vet.dict())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+@app.get("/veterinarios", response_model=list[schemas.VeterinarioResponse])
+def obtener_veterinarios(db: Session = Depends(get_db)):
+    return db.query(models.Veterinario).all()
+
+@app.post("/recepcionistas", response_model=schemas.RecepcionistaResponse)
+def crear_recepcionista(recepcionista: schemas.RecepcionistaCreate, db: Session = Depends(get_db)):
+    nuevo = models.Recepcionista(**recepcionista.dict())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+@app.get("/recepcionistas", response_model=list[schemas.RecepcionistaResponse])
+def obtener_recepcionistas(db: Session = Depends(get_db)):
+    return db.query(models.Recepcionista).all()

@@ -61,3 +61,35 @@ class ClienteResponse(ClienteCreate):
 
     class Config:
         orm_mode = True
+
+# --- Veterinario ---
+class VeterinarioCreate(BaseModel):
+    rut: str
+    nombre: str
+    apellido: str
+    edad: int
+    email: str
+    tipo: str = "veterinario"
+    id_vet: int
+    especializacion: str
+    contrasena: str
+
+class VeterinarioResponse(VeterinarioCreate):
+    class Config:
+        orm_mode = True
+
+# --- Recepcionista ---
+class RecepcionistaCreate(BaseModel):
+    rut: str
+    nombre: str
+    apellido: str
+    edad: int
+    email: str
+    tipo: str = "recepcionista"
+    id_recepcionista: int
+    contrasena: str
+
+class RecepcionistaResponse(RecepcionistaCreate):
+    class Config:
+        orm_mode = True
+
