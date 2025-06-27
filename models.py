@@ -3,7 +3,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, Date
 import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 Base = declarative_base()
+
 
 class Persona(Base):
     __tablename__ = 'persona'
@@ -99,11 +101,14 @@ class Consulta(Base):
     id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
     id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
     motivo = Column(String(255))
+    fecha_hora = Column(DateTime)  
 
     recepcionista = relationship("Recepcionista")
     mascota = relationship("Mascota")
     veterinario = relationship("Veterinario")
     cliente = relationship("Cliente")
 
+
 def create_tables(engine):
     Base.metadata.create_all(engine)
+
