@@ -1,125 +1,43 @@
+# streamlit_app.py
 import streamlit as st
-from datetime import datetime
+import requests
 
-from database import get_session
-import crud
-from models import Admin, Veterinario, Recepcionista, Cliente, Mascota, Consulta
+st.title("Registrar Mascota")
 
+# Formulario para datos de la mascota
+with st.form("form_mascota"):
+    nombre = st.text_input("Nombre")
+    raza = st.text_input("Raza")
+    sexo = st.selectbox("Sexo", ["Macho", "Hembra"])
+    dieta = st.text_input("Dieta")
+    caracter = st.text_input("Carácter")
+    habitat = st.text_input("Hábitat")
+    edad = st.number_input("Edad", min_value=0, step=1)
+    peso = st.text_input("Peso (ej: 30kg)")
+    altura = st.text_input("Altura (ej: 60cm)")
+    id_vet = st.number_input("ID Veterinario asignado", min_value=1, step=1)
+    
+    submit = st.form_submit_button("Registrar")
 
-def authenticate(rut: str, password: str):
-    """Verifica credenciales y retorna usuario y rol."""
-    with get_session() as db:
-        for modelo, rol in [
-            (Admin, "admin"),
-            (Veterinario, "veterinario"),
-            (Recepcionista, "recepcionista"),
-        ]:
-            user = db.query(modelo).filter_by(rut=rut).first()
-            if user and user.contrasena == password:
-                return user, rol
-    return None, None
-
-
-def admin_view():
-    st.header("Administración de usuarios")
-    with get_session() as db:
-        usuarios = crud.obtener_usuarios_por_tipo(db, "todos")
-        data = [
-            {"tipo": u.tipo, "rut": u.rut, "nombre": getattr(u, "nombre", "")} 
-            for u in usuarios if hasattr(u, "tipo")  # Asegúrate de que solo los usuarios sean procesados
-        ]
-    st.table(data)
-
-
-def recepcionista_view(usuario: Recepcionista):
-    st.header("Agendar consulta")
-    with get_session() as db:
-        clientes = db.query(Cliente).all()
-        mascotas = db.query(Mascota).all()
-        veterinarios = db.query(Veterinario).all()
-
-    cliente = st.selectbox(
-        "Cliente", options=clientes, format_func=lambda c: f"{c.id_cliente} - {c.nombre}"
-    )
-    mascota = st.selectbox(
-        "Mascota", options=mascotas, format_func=lambda m: f"{m.id_mascota} - {m.nombre}"
-    )
-    vet = st.selectbox(
-        "Veterinario", options=veterinarios, format_func=lambda v: f"{v.id_vet} - {v.nombre}"
-    )
-    motivo = st.text_input("Motivo")
-    fecha = st.date_input("Fecha")
-    hora = st.time_input("Hora")
-
-    if st.button("Agendar"):
-        fecha_hora = datetime.combine(fecha, hora)
-        with get_session() as db:
-            consulta = crud.crear_consulta(
-                db,
-                fecha_hora,
-                usuario.id_recepcionista,
-                mascota.id_mascota,
-                vet.id_vet,
-                cliente.id_cliente,
-                motivo,
-            )
-            if consulta:
-                st.success("Consulta agendada correctamente")
-            else:
-                st.error("No se pudo agendar la consulta")
-
-
-def veterinario_view(usuario: Veterinario):
-    st.header("Consultas asignadas")
-    with get_session() as db:
-        consultas = db.query(Consulta).filter_by(id_vet=usuario.id_vet).all()
-    data = [
-        {
-            "Fecha": c.fecha_hora,
-            "Mascota": c.mascota.nombre,
-            "Cliente": c.cliente.nombre,
-            "Motivo": c.motivo,
+    if submit:
+        data = {
+            "nombre": nombre,
+            "raza": raza,
+            "sexo": sexo,
+            "dieta": dieta,
+            "caracter": caracter,
+            "habitat": habitat,
+            "edad": edad,
+            "peso": peso,
+            "altura": altura,
+            "id_vet": id_vet
         }
-        for c in consultas
-    ]
-    st.table(data)
 
-
-def main():
-    st.title("Sistema Veterinaria")
-
-    if "usuario" not in st.session_state:
-        st.session_state.usuario = None
-        st.session_state.rol = None
-
-    if st.session_state.usuario is None:
-        rut = st.text_input("RUT")
-        password = st.text_input("Contraseña", type="password")
-        if st.button("Iniciar sesión"):
-            user, rol = authenticate(rut, password)
-            if user:
-                st.session_state.usuario = user
-                st.session_state.rol = rol
-                st.rerun()  # Cambié esto de experimental_rerun a rerun
+        try:
+            response = requests.post("http://127.0.0.1:8000/mascotas", json=data)
+            if response.status_code == 200:
+                st.success(f"Mascota '{nombre}' registrada con éxito.")
             else:
-                st.error("Credenciales inválidas")
-        return
-
-    if st.sidebar.button("Cerrar sesión"):
-        st.session_state.usuario = None
-        st.session_state.rol = None
-        st.rerun()  # Cambié esto de experimental_rerun a rerun
-
-    rol = st.session_state.rol
-    usuario = st.session_state.usuario
-
-    if rol == "admin":
-        admin_view()
-    elif rol == "recepcionista":
-        recepcionista_view(usuario)
-    elif rol == "veterinario":
-        veterinario_view(usuario)
-
-
-if __name__ == "__main__":
-    main()
+                st.error(f"Error al registrar mascota: {response.text}")
+        except requests.exceptions.ConnectionError:
+            st.error("No se pudo conectar con el servidor FastAPI. ¿Está corriendo?")

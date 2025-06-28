@@ -57,3 +57,6 @@ class MascotaController:
             self.db.rollback()
             print(f"[ERROR] al agregar historial: {e}")
             raise e
+
+    def obtener_historial(self, id_mascota):
+        return self.obtener_historial_por_mascota(id_mascota)
