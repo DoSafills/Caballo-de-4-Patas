@@ -18,7 +18,7 @@ MODELOS = {
 def obtener_usuarios_por_tipo(db: Session, tipo: str):
     if tipo == "todos":
         resultado = []
-        for modelo in MODELOS.values():
+        for modelo in [Admin, Veterinario, Recepcionista]:  # Solo incluir los modelos de usuario
             resultado.extend(db.query(modelo).all())
         return resultado
     modelo = MODELOS.get(tipo)

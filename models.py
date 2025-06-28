@@ -21,22 +21,16 @@ class Persona(Base):
 class Admin(Persona):
     __tablename__ = 'admin'
     id_admin = Column(Integer, primary_key=True)
-    contrasena = Column(String(50))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'admin',
-    }
+    contrasena = Column(String(50))
+    __mapper_args__ = {'polymorphic_identity': 'admin'}
 
 class Recepcionista(Persona):
     __tablename__ = 'recepcionista'
     id_recepcionista = Column(Integer, primary_key=True)
-    contrasena = Column(String(50))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'recepcionista',
-    }
+    contrasena = Column(String(50))
+    __mapper_args__ = {'polymorphic_identity': 'recepcionista'}
 
 class Cliente(Persona):
     __tablename__ = 'cliente'
@@ -45,17 +39,14 @@ class Cliente(Persona):
     mascotas = relationship("Mascota", back_populates="cliente")
     __mapper_args__ = {'polymorphic_identity': 'cliente'}
 
-
 class Veterinario(Persona):
     __tablename__ = 'veterinario'
     id_vet = Column(Integer, primary_key=True)
+    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
     especializacion = Column(String(255))
     contrasena = Column(String(255))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    __mapper_args__ = {'polymorphic_identity': 'veterinario'}
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'veterinario',
-    }
 
 class Mascota(Base):
     __tablename__ = 'mascota'

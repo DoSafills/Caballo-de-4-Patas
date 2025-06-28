@@ -6,18 +6,29 @@ import crud
 from models import Admin, Veterinario, Recepcionista, Cliente, Mascota, Consulta
 
 
+from models import Persona, Admin, Veterinario, Recepcionista
+
 def authenticate(rut: str, password: str):
-    """Verifica credenciales y retorna usuario y rol."""
     with get_session() as db:
-        for modelo, rol in [
-            (Admin, "admin"),
-            (Veterinario, "veterinario"),
-            (Recepcionista, "recepcionista"),
-        ]:
-            user = db.query(modelo).filter_by(rut=rut).first()
-            if user and user.contrasena == password:
-                return user, rol
-    return None, None
+        # Admin
+        admin = db.query(Admin).filter_by(rut=rut).first()
+        print("Admin encontrado:", admin)
+        if admin and admin.contrasena == password:
+            return admin, "admin"
+
+        # Recepcionista
+        recep = db.query(Recepcionista).filter_by(rut=rut).first()
+        print("Recepcionista encontrado:", recep)
+        if recep and recep.contrasena == password:
+            return recep, "recepcionista"
+
+        # Veterinario
+        vet = db.query(Veterinario).filter_by(rut=rut).first()
+        print("Veterinario encontrado:", vet)
+        if vet and vet.contrasena == password:
+            return vet, "veterinario"
+
+        return None, None
 
 
 def admin_view():
