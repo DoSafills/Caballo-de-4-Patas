@@ -70,6 +70,7 @@ class Mascota(Base):
     __tablename__ = 'mascota'
 
     id_mascota = Column(Integer, primary_key=True, autoincrement=True)
+    id_vet = Column(Integer, ForeignKey("veterinario.id_vet"))
     nombre = Column(String)
     raza = Column(String)
     sexo = Column(String)
@@ -81,8 +82,6 @@ class Mascota(Base):
     altura = Column(String)
     
     estado = Column(String, default="Pendiente atención")
- 
- 
     historiales = relationship("HistorialMedico", back_populates="mascota")
 
 class HistorialMedico(Base):

@@ -59,9 +59,6 @@ class ClienteResponse(ClienteCreate):
     class Config:
         orm_mode = True
 
-    class Config:
-        orm_mode = True
-
 # --- Veterinario ---
 class VeterinarioCreate(BaseModel):
     rut: str
