@@ -1,13 +1,8 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
-import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
-from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
-Base = declarative_base()
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.ext.declarative import declared_attr
 
+Base = declarative_base()
 
 class Persona(Base):
     __tablename__ = 'persona'
@@ -46,14 +41,10 @@ class Recepcionista(Persona):
 class Cliente(Persona):
     __tablename__ = 'cliente'
     id_cliente = Column(Integer, primary_key=True)
-    id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    mascotas = relationship("Mascota", back_populates="cliente")
+    __mapper_args__ = {'polymorphic_identity': 'cliente'}
 
-    mascota = relationship("Mascota")
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'cliente',
-    }
 
 class Veterinario(Persona):
     __tablename__ = 'veterinario'
@@ -68,49 +59,37 @@ class Veterinario(Persona):
 
 class Mascota(Base):
     __tablename__ = 'mascota'
-
-    id_mascota = Column(Integer, primary_key=True, autoincrement=True)
-    nombre = Column(String)
-    raza = Column(String)
-    sexo = Column(String)
-    dieta = Column(String)
-    caracter = Column(String)
-    habitat = Column(String)
+    id_mascota = Column(Integer, primary_key=True)
+    nombre = Column(String(255))
+    raza = Column(String(255))
+    sexo = Column(String(255))
+    dieta = Column(String(255))
+    caracter = Column(String(255))
+    habitat = Column(String(255))
+    id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
     edad = Column(Integer)
-    peso = Column(String)
-    altura = Column(String)
-    
-    estado = Column(String, default="Pendiente atención")
- 
- 
-    historiales = relationship("HistorialMedico", back_populates="mascota")
+    peso = Column(String(255))
+    altura = Column(String(255))
+    estado = Column(String(50), nullable=False, default="saludable")  
+    veterinario = relationship("Veterinario")
 
-class HistorialMedico(Base):
-    __tablename__ = "historial_medico"
-    id_historial = Column(Integer, primary_key=True, autoincrement=True)
-    fecha = Column(Date, default=datetime.date.today)
-    descripcion = Column(String, nullable=False)
-    id_mascota = Column(Integer, ForeignKey("mascota.id_mascota"))
-
-    mascota = relationship("Mascota", back_populates="historiales")
-
+    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
+    cliente = relationship("Cliente", back_populates="mascotas")  
 
 class Consulta(Base):
     __tablename__ = 'consulta'
     id_consulta = Column(Integer, primary_key=True)
+    fecha_hora = Column(DateTime)
     id_recepcionista = Column(Integer, ForeignKey('recepcionista.id_recepcionista'))
     id_mascota = Column(Integer, ForeignKey('mascota.id_mascota'))
     id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
     id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
     motivo = Column(String(255))
-    fecha_hora = Column(DateTime)  
 
     recepcionista = relationship("Recepcionista")
     mascota = relationship("Mascota")
     veterinario = relationship("Veterinario")
     cliente = relationship("Cliente")
 
-
 def create_tables(engine):
     Base.metadata.create_all(engine)
-
