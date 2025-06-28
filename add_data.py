@@ -1,5 +1,5 @@
 from database import SessionLocal, inicializar_base
-from models import Admin, Cliente, Veterinario, Mascota, Recepcionista
+from models import Admin, Cliente, Veterinario, Mascota
 from datetime import datetime
 
 # Inicializar base de datos
@@ -55,15 +55,6 @@ def agregar_datos():
             altura="60cm"
         )
         db.add(mascota)
-        recepcionista = Recepcionista(
-            rut="12345678-9",
-            nombre="Pepe",
-            apellido="Tapia",
-            edad=30,
-            email="recepcionista@example.com",
-            contrasena="clave123"
-        )
-        db.add(recepcionista)
 
         # Commit para guardar los datos
         db.commit()
