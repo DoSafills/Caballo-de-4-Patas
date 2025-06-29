@@ -1,10 +1,10 @@
 import logging
 from sqlalchemy.orm import Session
-from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from veterinaria2.models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
 from factoriUsuario import FactoriUsuario
 """Funciones CRUD para las entidades principales."""
 from datetime import datetime
-from database import get_session
+from veterinaria2.database import get_session
 from repositories.usuario_repository import UsuarioRepository
 from repositories.mascota_repository import MascotaRepository
 from repositories.consulta_repository import ConsultaRepository

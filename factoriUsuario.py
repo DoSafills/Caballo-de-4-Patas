@@ -1,4 +1,4 @@
-from models import Admin, Recepcionista, Veterinario
+from veterinaria2.models import Admin, Recepcionista, Veterinario
 
 class FactoriUsuario:
     @staticmethod

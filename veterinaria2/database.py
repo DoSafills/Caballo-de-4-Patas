@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import create_tables
+from veterinaria2.models import create_tables
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = "sqlite:///veterinaria.db"

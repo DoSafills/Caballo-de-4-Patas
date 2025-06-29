@@ -1,4 +1,4 @@
-from database import get_session
+from veterinaria2.database import get_session
 from repositories.mascota_repository import MascotaRepository
 
 

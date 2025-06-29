@@ -1,12 +1,12 @@
 # main.py
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
-import models
+from veterinaria2.database import SessionLocal, engine
+import veterinaria2.models as models
 from fastapi import Depends, HTTPException
-import schemas
+import veterinaria2.schemas as schemas
 from fastapi import Body
-
+from services import mascota_service
 
 models.Base.metadata.create_all(bind=engine)
 
