@@ -1,6 +1,6 @@
 import streamlit as st
 from controller import MascotaController
-from factories import MascotaFactory
+from Veterinaria.factories import MascotaFactory
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import os

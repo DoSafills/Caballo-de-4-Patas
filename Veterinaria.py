@@ -6,7 +6,7 @@ import Veterinaria.models as models
 from Veterinaria.models import create_tables
 import os
 from controller import MascotaController
-from factories import VentanaFactory
+from Veterinaria.factories import VentanaFactory
 
 # FACTORY
 class MascotaFactory:
