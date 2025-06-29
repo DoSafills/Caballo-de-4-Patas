@@ -6,7 +6,7 @@ import Veterinaria.models as models
 from fastapi import Depends, HTTPException
 import Veterinaria.schemas as schemas
 from fastapi import Body
-from services import mascota_service
+from Veterinaria.services import mascota_service
 
 models.Base.metadata.create_all(bind=engine)
 
