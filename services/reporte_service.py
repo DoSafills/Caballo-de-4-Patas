@@ -1,7 +1,7 @@
 from typing import List
 from utils.pdf_generator import generar_reporte_consultas
-from veterinaria2.database import get_session
-from veterinaria2.models import Consulta
+from database import get_session
+from models import Consulta
 
 
 def exportar_consultas_pdf(ruta: str) -> str:

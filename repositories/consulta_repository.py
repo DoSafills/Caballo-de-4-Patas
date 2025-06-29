@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from veterinaria2.models import Consulta
+from models import Consulta
 from .base_repository import BaseRepository
 
 

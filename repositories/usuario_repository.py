@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from veterinaria2.models import Admin, Veterinario, Recepcionista, Cliente
+from models import Admin, Veterinario, Recepcionista, Cliente
 from .base_repository import BaseRepository
 
 

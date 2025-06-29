@@ -1,4 +1,4 @@
-from veterinaria2.database import get_session
+from database import get_session
 from repositories.usuario_repository import UsuarioRepository
 
 

@@ -2,8 +2,8 @@ import customtkinter as ctk
 from tkinter import messagebox
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-import veterinaria2.models as models
-from veterinaria2.models import create_tables
+import models
+from models import create_tables
 import os
 from controller import MascotaController
 from factories import VentanaFactory
