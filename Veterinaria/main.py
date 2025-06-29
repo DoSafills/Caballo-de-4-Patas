@@ -6,6 +6,7 @@ import Veterinaria.models as models
 from fastapi import Depends, HTTPException
 import Veterinaria.schemas as schemas
 from fastapi import Body
+from services import mascota_service
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -26,16 +27,11 @@ def read_root():
 # Ruta POST: registrar mascota
 @app.post("/mascotas", response_model=schemas.MascotaResponse)
 def crear_mascota(mascota: schemas.MascotaCreate, db: Session = Depends(get_db)):
-    nueva = models.Mascota(**mascota.dict())
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
+    return mascota_service.crear_mascota(db, mascota)
 
-# Ruta GET: listar mascotas
 @app.get("/mascotas", response_model=list[schemas.MascotaResponse])
 def obtener_mascotas(db: Session = Depends(get_db)):
-    return db.query(models.Mascota).all()
+    return mascota_service.obtener_mascotas(db)
 
 @app.get("/historial/{id_mascota}", response_model=list[schemas.ConsultaResponse])
 def historial_mascota(id_mascota: int, db: Session = Depends(get_db)):

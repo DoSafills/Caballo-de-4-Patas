@@ -1,14 +1,13 @@
-from Veterinaria.database import get_session
-from repositories.mascota_repository import MascotaRepository
+from sqlalchemy.orm import Session
+from Veterinaria.models import Mascota
+from Veterinaria.schemas import MascotaCreate
 
+def crear_mascota(db: Session, datos: MascotaCreate):
+    mascota = Mascota(**datos.dict())
+    db.add(mascota)
+    db.commit()
+    db.refresh(mascota)
+    return mascota
 
-def crear_mascota(**data):
-    with get_session() as db:
-        repo = MascotaRepository(db)
-        return repo.add(**data)
-
-
-def listar_mascotas():
-    with get_session() as db:
-        repo = MascotaRepository(db)
-        return repo.get_all()
+def obtener_mascotas(db: Session):
+    return db.query(Mascota).all()
