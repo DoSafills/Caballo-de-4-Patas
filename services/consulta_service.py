@@ -1,5 +1,5 @@
 from datetime import datetime
-from database import get_session
+from Veterinaria.database import get_session
 from repositories.consulta_repository import ConsultaRepository
 
 

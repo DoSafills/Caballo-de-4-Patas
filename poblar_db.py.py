@@ -1,14 +1,12 @@
 #ex main
 
-
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base  # Asegúrate que esto importa la clase Base
-import models  # Esto debe importar también la clase Mascota
+from Veterinaria.models import Base  # Asegúrate que esto importa la clase Base
+import Veterinaria.models as models  # Esto debe importar también la clase Mascota
 from sqlalchemy.orm import Session
-from database import SessionLocal, inicializar_base
-import crud
+from Veterinaria.database import SessionLocal, inicializar_base
+import Veterinaria.crud as crud
 from datetime import datetime
 
 # Inicializar base de datos y sesión

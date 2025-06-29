@@ -1,6 +1,6 @@
 import customtkinter as ctk
-from crud import obtener_usuarios_por_tipo, eliminar_usuario, actualizar_usuario, crear_usuario
-from database import SessionLocal
+from Veterinaria.crud import obtener_usuarios_por_tipo, eliminar_usuario, actualizar_usuario, crear_usuario
+from Veterinaria.database import SessionLocal
 from tkinter import messagebox
 from iterator import ColeccionUsuarios
 

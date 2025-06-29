@@ -1,5 +1,5 @@
-from models import Mascota
-from models import Mascota, HistorialMedico
+from Veterinaria.models import Mascota
+from Veterinaria.models import Mascota, HistorialMedico
 
 class MascotaController:
     def __init__(self, db_session, factory):

@@ -1,6 +1,6 @@
 from typing import List
 from fpdf import FPDF
-from models import Consulta
+from Veterinaria.models import Consulta
 
 
 def generar_reporte_consultas(consultas: List[Consulta], ruta: str) -> str:

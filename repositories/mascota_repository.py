@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Mascota
+from Veterinaria.models import Mascota
 from .base_repository import BaseRepository
 
 

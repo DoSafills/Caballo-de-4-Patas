@@ -1,6 +1,6 @@
 import logging
 from sqlalchemy.orm import Session
-from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
+from Veterinaria.models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
 from factoriUsuario import FactoriUsuario
 from datetime import datetime
 

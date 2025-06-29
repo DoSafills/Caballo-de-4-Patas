@@ -1,5 +1,5 @@
-from database import SessionLocal, inicializar_base
-from models import Admin, Cliente, Veterinario, Mascota
+from Veterinaria.database import SessionLocal, inicializar_base
+from Veterinaria.models import Admin, Cliente, Veterinario, Mascota
 from datetime import datetime
 
 # Inicializar base de datos

@@ -1,7 +1,7 @@
 import os
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 from repositories.mascota_repository import MascotaRepository
-from database import get_session
+from Veterinaria.database import get_session
 
 
 def test_agregar_mascota():
