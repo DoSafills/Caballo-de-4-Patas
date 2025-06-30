@@ -33,6 +33,24 @@ def crear_mascota(mascota: schemas.MascotaCreate, db: Session = Depends(get_db))
 def obtener_mascotas(db: Session = Depends(get_db)):
     return mascota_service.obtener_mascotas(db)
 
+@app.put("/mascotas/{id_mascota}", response_model=schemas.MascotaResponse)
+def actualizar_mascota(id_mascota: int, datos: schemas.MascotaUpdate, db: Session = Depends(get_db)):
+    mascota = db.query(models.Mascota).filter(models.Mascota.id_mascota == id_mascota).first()
+    if not mascota:
+        raise HTTPException(status_code=404, detail="Mascota no encontrada")
+
+    # Actualiza solo los campos que vienen en el body
+    if datos.edad is not None:
+        mascota.edad = datos.edad
+    if datos.sexo is not None:
+        mascota.sexo = datos.sexo
+    if datos.estado is not None:
+        mascota.estado = datos.estado
+
+    db.commit()
+    db.refresh(mascota)
+    return mascota
+
 @app.get("/historial/{id_mascota}", response_model=list[schemas.ConsultaResponse])
 def historial_mascota(id_mascota: int, db: Session = Depends(get_db)):
     historial = db.query(models.Consulta).filter(models.Consulta.id_mascota == id_mascota).all()

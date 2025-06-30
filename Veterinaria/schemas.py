@@ -18,6 +18,11 @@ class MascotaCreate(BaseModel):
     altura: str
     id_vet: Optional[int] = None  # Relación opcional
 
+class MascotaUpdate(BaseModel):
+    edad: Optional[int]
+    sexo: Optional[str]
+    estado: Optional[str]
+
 # --- Modelo para responder con datos de mascota ---
 class MascotaResponse(MascotaCreate):
     id_mascota: int

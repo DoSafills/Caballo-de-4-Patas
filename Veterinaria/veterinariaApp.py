@@ -96,6 +96,12 @@ elif pagina == "Gestión":
                         }
                         res = requests.put(f"{API_URL}/mascotas/{selected['id_mascota']}", json=data)
 
+                        # Depuracion
+                        st.write("Código de respuesta:", res.status_code)
+                        st.write("Mensaje de respuesta:", res.text)
+                        st.write("Datos enviados:", data)
+                        st.write("URL usada:", f"{API_URL}/mascotas/{selected['id_mascota']}")
+
                         if historial_nuevo.strip():
                             historial_data = {
                                 "id_mascota": selected['id_mascota'],
