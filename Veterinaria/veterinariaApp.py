@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import datetime
 
 API_URL = "http://127.0.0.1:8000"
 
@@ -97,21 +98,23 @@ elif pagina == "Gestión":
                         res = requests.put(f"{API_URL}/mascotas/{selected['id_mascota']}", json=data)
 
                         # Depuracion
-                        st.write("Código de respuesta:", res.status_code)
-                        st.write("Mensaje de respuesta:", res.text)
-                        st.write("Datos enviados:", data)
-                        st.write("URL usada:", f"{API_URL}/mascotas/{selected['id_mascota']}")
+                        print("Código de respuesta:", res.status_code)
+                        print("Mensaje de respuesta:", res.text)
+                        print("Datos enviados:", data)
+                        print("URL usada:", f"{API_URL}/mascotas/{selected['id_mascota']}")
 
                         if historial_nuevo.strip():
+                            fecha_actual = datetime.datetime.now().isoformat()
                             historial_data = {
                                 "id_mascota": selected['id_mascota'],
-                                "id_vet": selected['id_vet'],  # Se espera que venga de la mascota
-                                "id_cliente": 1,  # Ajustar según sea necesario
-                                "id_recepcionista": 1,  # Ajustar según sea necesario
+                                "id_vet": selected.get('id_vet'),  # Puede ser None
+                                "id_cliente": 1,  # Ajusta esto según contexto real
+                                "id_recepcionista": 1,  # Ajusta esto según contexto real
                                 "motivo": historial_nuevo,
-                                "fecha_hora": "2025-01-01T00:00:00"  # Agregar fecha real si se desea
+                                "fecha_hora": fecha_actual
                             }
-                            requests.post(f"{API_URL}/historial", json=historial_data)
+                            res_historial = requests.post(f"{API_URL}/historial", json=historial_data)
+                            print("Respuesta crear historial:", res_historial.status_code, res_historial.text)
 
                         if res.status_code == 200:
                             st.success("Datos actualizados correctamente.")
