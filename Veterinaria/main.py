@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException
 import Veterinaria.schemas as schemas
 from fastapi import Body
 from Veterinaria.services import mascota_service
+from Veterinaria.services import consulta_service
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -38,19 +39,12 @@ def actualizar_mascota(id_mascota: int, datos: schemas.MascotaUpdate, db: Sessio
     return mascota_service.actualizar_mascota(db, id_mascota, datos)
 
 @app.get("/historial/{id_mascota}", response_model=list[schemas.ConsultaResponse])
-def historial_mascota(id_mascota: int, db: Session = Depends(get_db)):
-    historial = db.query(models.Consulta).filter(models.Consulta.id_mascota == id_mascota).all()
-    if not historial:
-        raise HTTPException(status_code=404, detail="No se encontró historial para esa mascota")
-    return historial
+def historial_mascota(id_mascota: int):
+    return consulta_service.listar_por_mascota(id_mascota)
 
 @app.post("/historial", response_model=schemas.ConsultaResponse)
-def crear_consulta(consulta: schemas.ConsultaCreate, db: Session = Depends(get_db)):
-    nueva = models.Consulta(**consulta.dict())
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
+def crear_consulta(consulta: schemas.ConsultaCreate):
+    return consulta_service.crear_consulta(**consulta.dict())
 
 @app.post("/clientes", response_model=schemas.ClienteResponse)
 def crear_cliente(cliente: schemas.ClienteCreate, db: Session = Depends(get_db)):
