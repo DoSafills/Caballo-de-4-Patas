@@ -70,7 +70,18 @@ elif pagina == "Gestión":
         if selected:
             with st.form("modificar_mascota"):
                 edad = st.number_input("Edad", min_value=0, value=selected['edad'])
-                sexo = st.selectbox("Sexo", ["Macho", "Hembra"], index=["Macho", "Hembra"].index(selected['sexo']))
+
+                opciones_sexo = ["Macho", "Hembra"]
+                sexo_valor = selected.get('sexo', 'Macho')  # valor por defecto
+
+                # Asegurarse de que el sexo esté en las opciones
+                if sexo_valor not in opciones_sexo:
+                    sexo_index = 0  # Por ejemplo, Macho como predeterminado
+                else:
+                    sexo_index = opciones_sexo.index(sexo_valor)
+
+                sexo = st.selectbox("Sexo", opciones_sexo, index=sexo_index)
+
                 estado = st.selectbox("Estado Médico", ["Alta", "Pendiente atención", "En tratamiento"],
                                     index=["Alta", "Pendiente atención", "En tratamiento"].index(selected.get("estado", "Pendiente atención")))
                 historial_nuevo = st.text_input("Añadir al historial", placeholder="Ej: Vacunación")
