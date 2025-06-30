@@ -1,5 +1,6 @@
 from datetime import datetime
 from database import get_session
+from models import Consulta
 from repositories.consulta_repository import ConsultaRepository
 
 
@@ -20,3 +21,7 @@ def listar_consultas():
     with get_session() as db:
         repo = ConsultaRepository(db)
         return repo.get_all()
+
+def obtener_consultas_veterinario(id_vet):
+    with get_session() as db:
+        return db.query(Consulta).filter_by(id_vet=id_vet).all()

@@ -4,29 +4,34 @@ from ui.admin_ui import mostrar_admin
 from ui.recepcionista_ui import mostrar_recepcionista
 from ui.veterinario_ui import mostrar_veterinario
 
-
 def main():
-    st.title('C4P - Gestion Veterinaria')
-    usuario = st.session_state.get('usuario')
-    if not usuario:
+    st.title('C4P - Gestión Veterinaria')
+
+    # Si no hay usuario autenticado, mostrar formulario login
+    if 'usuario' not in st.session_state or st.session_state['usuario'] is None:
         usuario = login_form()
         if usuario:
             st.session_state['usuario'] = usuario
-        else:
-            return
+            st.rerun()  # Redirecciona tras login
+        return
 
+    # Cerrar sesión
     if st.sidebar.button('Cerrar sesión'):
-        st.session_state.pop('usuario', None)
-        st.experimental_rerun()
+        st.session_state['usuario'] = None
+        st.rerun()
 
-    tipo = usuario.tipo
+    # Redireccionar según tipo
+    usuario = st.session_state['usuario']
+    tipo = getattr(usuario, 'tipo', None)
+
     if tipo == 'admin':
         mostrar_admin()
     elif tipo == 'recepcionista':
         mostrar_recepcionista(usuario)
     elif tipo == 'veterinario':
         mostrar_veterinario(usuario)
-
+    else:
+        st.error("Tipo de usuario desconocido")
 
 if __name__ == '__main__':
     main()

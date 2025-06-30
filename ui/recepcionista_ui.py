@@ -105,6 +105,4 @@ def mostrar_recepcionista(usuario):
         ]
         st.table(data)
 
-    if st.button('Cerrar sesión'):
-        st.session_state.pop('usuario', None)
-        st.experimental_rerun()
+
