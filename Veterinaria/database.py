@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from Veterinaria.models import create_tables
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///veterinaria.db"
+DATABASE_URL = "sqlite:///Veterinaria/veterinaria.db"
 
 engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
