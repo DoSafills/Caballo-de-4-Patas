@@ -35,21 +35,7 @@ def obtener_mascotas(db: Session = Depends(get_db)):
 
 @app.put("/mascotas/{id_mascota}", response_model=schemas.MascotaResponse)
 def actualizar_mascota(id_mascota: int, datos: schemas.MascotaUpdate, db: Session = Depends(get_db)):
-    mascota = db.query(models.Mascota).filter(models.Mascota.id_mascota == id_mascota).first()
-    if not mascota:
-        raise HTTPException(status_code=404, detail="Mascota no encontrada")
-
-    # Actualiza solo los campos que vienen en el body
-    if datos.edad is not None:
-        mascota.edad = datos.edad
-    if datos.sexo is not None:
-        mascota.sexo = datos.sexo
-    if datos.estado is not None:
-        mascota.estado = datos.estado
-
-    db.commit()
-    db.refresh(mascota)
-    return mascota
+    return mascota_service.actualizar_mascota(db, id_mascota, datos)
 
 @app.get("/historial/{id_mascota}", response_model=list[schemas.ConsultaResponse])
 def historial_mascota(id_mascota: int, db: Session = Depends(get_db)):
