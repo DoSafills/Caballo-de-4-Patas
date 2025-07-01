@@ -4,150 +4,137 @@ import datetime
 
 API_URL = "http://127.0.0.1:8000"
 
-st.set_page_config(page_title="Veterinaria HOME PETS", layout="wide")
+def mostrar_veterinario(usuario):
+    pagina = st.sidebar.selectbox("Ir a:", ["Registrar Mascota", "Gestión", "Historial"])
 
-pagina = st.sidebar.selectbox("Ir a:", ["Registrar Mascota", "Gestión", "Historial"])
+    if pagina == "Registrar Mascota":
+        st.title("Asistencia de Reserva - HOME PETS")
+        st.markdown("#### Precio de la consulta: CLP $5.000")
 
-if pagina == "Registrar Mascota":
-    st.title("Asistencia de Reserva - HOME PETS")
-    st.markdown("#### Precio de la consulta: CLP $5.000")
+        with st.form("form_mascota"):
+            st.subheader("Datos de la Mascota")
 
-    with st.form("form_mascota"):
-        st.subheader("Datos de la Mascota")
+            nombre = st.text_input("Nombre", placeholder="Fido")
+            raza = st.text_input("Raza", placeholder="Golden")
+            sexo = st.radio("Sexo", ["Macho", "Hembra"])
+            edad = st.selectbox("Edad", [i for i in range(1, 21)])
 
-        nombre = st.text_input("Nombre", placeholder="Fido")
-        raza = st.text_input("Raza", placeholder="Golden")
-        sexo = st.radio("Sexo", ["Macho", "Hembra"])
-        edad = st.selectbox("Edad", [i for i in range(1, 21)])
+            dieta = st.selectbox("Dieta", ["Normal", "Especial", "Dietética"])
+            caracter = st.selectbox("Carácter", ["Tranquilo", "Agresivo", "Juguetón", "Tímido"])
+            habitat = st.selectbox("Hábitat", ["Casa", "Patio", "Campo", "Interior", "Exterior"])
 
-        dieta = st.selectbox("Dieta", ["Normal", "Especial", "Dietética"])
-        caracter = st.selectbox("Carácter", ["Tranquilo", "Agresivo", "Juguetón", "Tímido"])
-        habitat = st.selectbox("Hábitat", ["Casa", "Patio", "Campo", "Interior", "Exterior"])
+            peso = st.text_input("Peso (kg)", placeholder="10.5")
+            altura = st.text_input("Altura (cm)", placeholder="40")
+            id_vet = usuario.id_vet
 
-        peso = st.text_input("Peso (kg)", placeholder="10.5")
-        altura = st.text_input("Altura (cm)", placeholder="40")
-        id_vet = st.number_input("ID Veterinario asignado", min_value=1, step=1)
+            submit = st.form_submit_button("Registrar")
 
-        submit = st.form_submit_button("Registrar")
+            if submit:
+                data = {
+                    "nombre": nombre,
+                    "raza": raza,
+                    "sexo": sexo,
+                    "dieta": dieta,
+                    "caracter": caracter,
+                    "habitat": habitat,
+                    "edad": edad,
+                    "peso": peso,
+                    "altura": altura,
+                    "id_vet": id_vet
+                }
 
-        if submit:
-            data = {
-                "nombre": nombre,
-                "raza": raza,
-                "sexo": sexo,
-                "dieta": dieta,
-                "caracter": caracter,
-                "habitat": habitat,
-                "edad": edad,
-                "peso": peso,
-                "altura": altura,
-                "id_vet": id_vet
-            }
+                try:
+                    response = requests.post(f"{API_URL}/mascotas", json=data)
+                    if response.status_code == 200:
+                        st.success(f"Mascota '{nombre}' registrada con éxito.")
+                    else:
+                        st.error(f"Error: {response.text}")
+                except requests.exceptions.ConnectionError:
+                    st.error("No se pudo conectar con el servidor FastAPI.")
 
-            try:
-                response = requests.post(f"{API_URL}/mascotas", json=data)
-                if response.status_code == 200:
-                    st.success(f"Mascota '{nombre}' registrada con éxito.")
-                else:
-                    st.error(f"Error: {response.text}")
-            except requests.exceptions.ConnectionError:
-                st.error("No se pudo conectar con el servidor FastAPI.")
+    elif pagina == "Gestión":
+        st.title("Gestión de Mascotas")
+        try:
+            response = requests.get(f"{API_URL}/mascotas")
+            mascotas = response.json() if response.status_code == 200 else []
+        except:
+            st.error("Error de conexión con el API.")
+            mascotas = []
 
-elif pagina == "Gestión":
-    st.title("Gestión de Mascotas")
-    try:
-        response = requests.get(f"{API_URL}/mascotas")
-        mascotas = response.json() if response.status_code == 200 else []
-    except:
-        st.error("Error de conexión con el API.")
-        mascotas = []
+        if not mascotas:
+            st.info("No hay mascotas registradas.")
+        else:
+            selected = st.selectbox("Selecciona una mascota:", mascotas,
+                                    format_func=lambda x: f"{x['id_mascota']} - {x['nombre']} ({x['raza']})")
 
-    if not mascotas:
-        st.info("No hay mascotas registradas.")
-    else:
-        selected = st.selectbox("Selecciona una mascota:", mascotas,
-                                format_func=lambda x: f"{x['id_mascota']} - {x['nombre']} ({x['raza']})")
+            if selected:
+                with st.form("modificar_mascota"):
+                    edad = st.number_input("Edad", min_value=0, value=selected['edad'])
 
-        if selected:
-            with st.form("modificar_mascota"):
-                edad = st.number_input("Edad", min_value=0, value=selected['edad'])
+                    opciones_sexo = ["Macho", "Hembra"]
+                    sexo_valor = selected.get('sexo', 'Macho')
+                    sexo_index = opciones_sexo.index(sexo_valor) if sexo_valor in opciones_sexo else 0
+                    sexo = st.selectbox("Sexo", opciones_sexo, index=sexo_index)
 
-                opciones_sexo = ["Macho", "Hembra"]
-                sexo_valor = selected.get('sexo', 'Macho')  # valor por defecto
+                    estado = st.selectbox("Estado Médico", ["Alta", "Pendiente atención", "En tratamiento"],
+                                        index=["Alta", "Pendiente atención", "En tratamiento"].index(
+                                            selected.get("estado", "Pendiente atención")))
+                    historial_nuevo = st.text_input("Añadir al historial", placeholder="Ej: Vacunación")
+                    actualizar = st.form_submit_button("Guardar Cambios")
 
-                # Asegurarse de que el sexo esté en las opciones
-                if sexo_valor not in opciones_sexo:
-                    sexo_index = 0  # Por ejemplo, Macho como predeterminado
-                else:
-                    sexo_index = opciones_sexo.index(sexo_valor)
-
-                sexo = st.selectbox("Sexo", opciones_sexo, index=sexo_index)
-
-                estado = st.selectbox("Estado Médico", ["Alta", "Pendiente atención", "En tratamiento"],
-                                    index=["Alta", "Pendiente atención", "En tratamiento"].index(selected.get("estado", "Pendiente atención")))
-                historial_nuevo = st.text_input("Añadir al historial", placeholder="Ej: Vacunación")
-                actualizar = st.form_submit_button("Guardar Cambios")
-
-                if actualizar:
-                    try:
-                        data = {
-                            "edad": edad,
-                            "sexo": sexo,
-                            "estado": estado
-                        }
-                        res = requests.put(f"{API_URL}/mascotas/{selected['id_mascota']}", json=data)
-
-                        # Depuracion
-                        print("Código de respuesta:", res.status_code)
-                        print("Mensaje de respuesta:", res.text)
-                        print("Datos enviados:", data)
-                        print("URL usada:", f"{API_URL}/mascotas/{selected['id_mascota']}")
-
-                        if historial_nuevo.strip():
-                            fecha_actual = datetime.datetime.now().isoformat()
-                            historial_data = {
-                                "id_mascota": selected['id_mascota'],
-                                "id_vet": selected.get('id_vet'),  # Puede ser None
-                                "id_cliente": 1,  # Ajusta esto según contexto real
-                                "id_recepcionista": 1,  # Ajusta esto según contexto real
-                                "motivo": historial_nuevo,
-                                "fecha_hora": fecha_actual
+                    if actualizar:
+                        try:
+                            data = {
+                                "edad": edad,
+                                "sexo": sexo,
+                                "estado": estado
                             }
-                            res_historial = requests.post(f"{API_URL}/historial", json=historial_data)
-                            print("Respuesta crear historial:", res_historial.status_code, res_historial.text)
+                            res = requests.put(f"{API_URL}/mascotas/{selected['id_mascota']}", json=data)
 
-                        if res.status_code == 200:
-                            st.success("Datos actualizados correctamente.")
-                        else:
-                            st.error("Error al actualizar mascota.")
-                    except Exception as e:
-                        st.error(f"Error al actualizar: {e}")
+                            if historial_nuevo.strip():
+                                fecha_actual = datetime.datetime.now().isoformat()
+                                historial_data = {
+                                    "id_mascota": selected['id_mascota'],
+                                    "id_vet": selected.get('id_vet'),
+                                    "id_cliente": 1,
+                                    "id_recepcionista": 1,
+                                    "motivo": historial_nuevo,
+                                    "fecha_hora": fecha_actual
+                                }
+                                res_historial = requests.post(f"{API_URL}/historial", json=historial_data)
 
-elif pagina == "Historial":
-    st.title("Historial de Mascotas")
-    try:
-        response = requests.get(f"{API_URL}/mascotas")
-        mascotas = response.json() if response.status_code == 200 else []
-    except:
-        st.error("No se pudo obtener la lista de mascotas.")
-        mascotas = []
+                            if res.status_code == 200:
+                                st.success("Datos actualizados correctamente.")
+                            else:
+                                st.error("Error al actualizar mascota.")
+                        except Exception as e:
+                            st.error(f"Error al actualizar: {e}")
 
-    if not mascotas:
-        st.info("No hay mascotas registradas.")
-    else:
-        selected = st.selectbox("Selecciona una mascota:", mascotas,
-                                format_func=lambda x: f"{x['id_mascota']} - {x['nombre']}")
+    elif pagina == "Historial":
+        st.title("Historial de Mascotas")
+        try:
+            response = requests.get(f"{API_URL}/mascotas")
+            mascotas = response.json() if response.status_code == 200 else []
+        except:
+            st.error("No se pudo obtener la lista de mascotas.")
+            mascotas = []
 
-        if selected:
-            try:
-                response = requests.get(f"{API_URL}/historial/{selected['id_mascota']}")
-                historial = response.json() if response.status_code == 200 else []
-            except:
-                historial = []
+        if not mascotas:
+            st.info("No hay mascotas registradas.")
+        else:
+            selected = st.selectbox("Selecciona una mascota:", mascotas,
+                                    format_func=lambda x: f"{x['id_mascota']} - {x['nombre']}")
 
-            st.subheader(f"Historial de {selected['nombre']}")
-            if not historial:
-                st.warning("Esta mascota no tiene historial registrado.")
-            else:
-                for h in historial:
-                    st.markdown(f"- {h['motivo']} ({h['fecha_hora']})")
+            if selected:
+                try:
+                    response = requests.get(f"{API_URL}/historial/{selected['id_mascota']}")
+                    historial = response.json() if response.status_code == 200 else []
+                except:
+                    historial = []
+
+                st.subheader(f"Historial de {selected['nombre']}")
+                if not historial:
+                    st.warning("Esta mascota no tiene historial registrado.")
+                else:
+                    for h in historial:
+                        st.markdown(f"- {h['motivo']} ({h['fecha_hora']})")
