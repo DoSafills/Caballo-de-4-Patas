@@ -1,8 +1,7 @@
 from datetime import datetime
 from database import get_session
-from models import Consulta
+from models import Consulta # el models no se deberia usar aca, si no en el repository
 from repositories.consulta_repository import ConsultaRepository
-
 
 def crear_consulta(fecha_hora: datetime, id_recepcionista: int, id_mascota: int, id_vet: int, id_cliente: int, motivo: str):
     with get_session() as db:
@@ -15,7 +14,6 @@ def crear_consulta(fecha_hora: datetime, id_recepcionista: int, id_mascota: int,
             id_cliente=id_cliente,
             motivo=motivo,
         )
-
 
 def listar_consultas():
     with get_session() as db:

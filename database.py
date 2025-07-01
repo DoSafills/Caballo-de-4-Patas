@@ -1,38 +1,22 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import os
-
+from sqlalchemy.orm import sessionmaker, declarative_base
 from models import create_tables
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///veterinaria.db")
+DATABASE_URL = "sqlite:///veterinaria.db"
 
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-class DatabaseSingleton:
-    """Singleton para la conexión a la base de datos."""
+Base = declarative_base()
 
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.engine = create_engine(DATABASE_URL, echo=False)
-            cls._instance.SessionLocal = sessionmaker(
-                autocommit=False, autoflush=False, bind=cls._instance.engine
-            )
-            create_tables(cls._instance.engine)
-        return cls._instance
-
-
-def get_session():
-    """Obtiene una nueva sesión de base de datos."""
-    return DatabaseSingleton().SessionLocal()
-
-
-# Objetos para compatibilidad con el código existente
-engine = DatabaseSingleton().engine
-SessionLocal = DatabaseSingleton().SessionLocal
-
-
+# Función para inicializar tablas (si la usas desde un script)
 def inicializar_base():
-    """Crea las tablas si no existen."""
     create_tables(engine)
+
+# Función para usar desde servicios, sin pasar SessionLocal manualmente
+def get_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

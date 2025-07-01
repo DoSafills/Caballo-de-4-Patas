@@ -1,5 +1,0 @@
-SQLAlchemy
-Streamlit
-customtkinter
-tkinter
-pytest

@@ -2,13 +2,13 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 
-from Veterinaria.database import engine
-import Veterinaria.models as models
-import Veterinaria.schemas as schemas
+from database import engine
+import models as models
+import schemas as schemas
 
 from fastapi import Body
-from Veterinaria.services import mascota_service
-from Veterinaria.services import consulta_service
+from services import mascota_service
+from services import consulta_service
 
 models.Base.metadata.create_all(bind=engine)
 
