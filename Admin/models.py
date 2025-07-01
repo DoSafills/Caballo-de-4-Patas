@@ -21,22 +21,16 @@ class Persona(Base):
 class Admin(Persona):
     __tablename__ = 'admin'
     id_admin = Column(Integer, primary_key=True)
-    contrasena = Column(String(50))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'admin',
-    }
+    contrasena = Column(String(50))
+    __mapper_args__ = {'polymorphic_identity': 'admin'}
 
 class Recepcionista(Persona):
     __tablename__ = 'recepcionista'
     id_recepcionista = Column(Integer, primary_key=True)
-    contrasena = Column(String(50))
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'recepcionista',
-    }
+    contrasena = Column(String(50))
+    __mapper_args__ = {'polymorphic_identity': 'recepcionista'}
 
 class Cliente(Persona):
     __tablename__ = 'cliente'
@@ -49,13 +43,11 @@ class Cliente(Persona):
 class Veterinario(Persona):
     __tablename__ = 'veterinario'
     id_vet = Column(Integer, primary_key=True)
+    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
     especializacion = Column(String(255))
     contrasena = Column(String(255))
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    __mapper_args__ = {'polymorphic_identity': 'veterinario'}
 
-    __mapper_args__ = {
-        'polymorphic_identity': 'veterinario',
-    }
 
 class Mascota(Base):
     __tablename__ = 'mascota'
@@ -71,7 +63,11 @@ class Mascota(Base):
     peso = Column(String(255))
     altura = Column(String(255))
     estado = Column(String(50), nullable=False, default="saludable")  
+    estado = Column(String(50), nullable=False, default="saludable")  
     veterinario = relationship("Veterinario")
+
+    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
+    cliente = relationship("Cliente", back_populates="mascotas")  
 
     id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
     cliente = relationship("Cliente", back_populates="mascotas")  
@@ -93,3 +89,4 @@ class Consulta(Base):
 
 def create_tables(engine):
     Base.metadata.create_all(engine)
+
