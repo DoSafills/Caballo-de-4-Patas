@@ -3,7 +3,7 @@ from ui.login_ui import login_form
 from ui.admin_ui import mostrar_admin
 from ui.recepcionista_ui import mostrar_recepcionista
 from ui.veterinario_ui import mostrar_veterinario
-
+#main principal
 def main():
     st.title('C4P - Gestión Veterinaria')
 
