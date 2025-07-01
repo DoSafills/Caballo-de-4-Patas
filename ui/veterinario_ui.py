@@ -1,61 +1,37 @@
 import streamlit as st
-from database import get_session
-from models import Cliente
-from services.consulta_service import obtener_consultas_veterinario
-from services.mascota_service import registrar_mascota
+import requests
+import datetime
 
-def mostrar_veterinario(veterinario):
-    st.title(f"Panel Veterinario - Dr. {veterinario.nombre}")
+API_URL = "http://127.0.0.1:8000"
 
-    # Sección: Consultas asignadas
-    st.subheader("Consultas asignadas")
-    consultas = obtener_consultas_veterinario(veterinario.id_vet)
+st.set_page_config(page_title="Veterinaria HOME PETS", layout="wide")
 
-    if not consultas:
-        st.info("No tienes consultas asignadas.")
-    else:
-        for c in consultas:
-            st.markdown("---")
-            st.markdown(f"### 🐾 Mascota: {c.mascota.nombre}")
-            st.markdown(f"**Fecha y hora:** {c.fecha_hora}")
-            st.markdown(f"**Motivo:** {c.motivo}")
-            st.markdown(f"**Cliente:** {c.cliente.nombre}")
+pagina = st.sidebar.selectbox("Ir a:", ["Registrar Mascota", "Gestión", "Historial"])
 
-    # Sección: Formulario para registrar mascota
-    st.subheader("Registrar nueva mascota")
-    formulario_registrar_mascota_para_veterinario(veterinario)
+if pagina == "Registrar Mascota":
+    st.title("Asistencia de Reserva - HOME PETS")
+    st.markdown("#### Precio de la consulta: CLP $5.000")
 
+    with st.form("form_mascota"):
+        st.subheader("Datos de la Mascota")
 
-def formulario_registrar_mascota_para_veterinario(veterinario):
-    with get_session() as db:
-        clientes = db.query(Cliente).all()
+        nombre = st.text_input("Nombre", placeholder="Fido")
+        raza = st.text_input("Raza", placeholder="Golden")
+        sexo = st.radio("Sexo", ["Macho", "Hembra"])
+        edad = st.selectbox("Edad", [i for i in range(1, 21)])
 
-    if not clientes:
-        st.warning("No hay clientes registrados en el sistema.")
-        return
+        dieta = st.selectbox("Dieta", ["Normal", "Especial", "Dietética"])
+        caracter = st.selectbox("Carácter", ["Tranquilo", "Agresivo", "Juguetón", "Tímido"])
+        habitat = st.selectbox("Hábitat", ["Casa", "Patio", "Campo", "Interior", "Exterior"])
 
-    cliente = st.selectbox("Cliente", clientes, format_func=lambda c: f"{c.id_cliente} - {c.nombre}")
+        peso = st.text_input("Peso (kg)", placeholder="10.5")
+        altura = st.text_input("Altura (cm)", placeholder="40")
+        id_vet = st.number_input("ID Veterinario asignado", min_value=1, step=1)
 
-    with st.form("form_mascota_vet"):
-        nombre = st.text_input("Nombre")
-        raza = st.text_input("Raza")
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra"])
-        dieta = st.text_input("Dieta")
-        caracter = st.text_input("Carácter")
-        habitat = st.text_input("Hábitat")
-        edad = st.number_input("Edad", min_value=0)
-        peso = st.text_input("Peso (ej: 30kg)")
-        altura = st.text_input("Altura (ej: 60cm)")
-        estado = st.selectbox("Estado de salud", ["saludable", "en tratamiento", "crítico"])
+        submit = st.form_submit_button("Registrar")
 
-        enviar = st.form_submit_button("Registrar")
-
-        if enviar:
-            if not nombre or not raza or not peso or not altura:
-                st.error("Por favor, completa todos los campos obligatorios.")
-                return
-
-            datos = {
+        if submit:
+            data = {
                 "nombre": nombre,
                 "raza": raza,
                 "sexo": sexo,
@@ -65,13 +41,113 @@ def formulario_registrar_mascota_para_veterinario(veterinario):
                 "edad": edad,
                 "peso": peso,
                 "altura": altura,
-                "estado": estado,
-                "id_vet": veterinario.id_vet,
-                "id_cliente": cliente.id_cliente
+                "id_vet": id_vet
             }
 
-            exito = registrar_mascota(datos)
-            if exito:
-                st.success(f"Mascota '{nombre}' registrada correctamente.")
+            try:
+                response = requests.post(f"{API_URL}/mascotas", json=data)
+                if response.status_code == 200:
+                    st.success(f"Mascota '{nombre}' registrada con éxito.")
+                else:
+                    st.error(f"Error: {response.text}")
+            except requests.exceptions.ConnectionError:
+                st.error("No se pudo conectar con el servidor FastAPI.")
+
+elif pagina == "Gestión":
+    st.title("Gestión de Mascotas")
+    try:
+        response = requests.get(f"{API_URL}/mascotas")
+        mascotas = response.json() if response.status_code == 200 else []
+    except:
+        st.error("Error de conexión con el API.")
+        mascotas = []
+
+    if not mascotas:
+        st.info("No hay mascotas registradas.")
+    else:
+        selected = st.selectbox("Selecciona una mascota:", mascotas,
+                                format_func=lambda x: f"{x['id_mascota']} - {x['nombre']} ({x['raza']})")
+
+        if selected:
+            with st.form("modificar_mascota"):
+                edad = st.number_input("Edad", min_value=0, value=selected['edad'])
+
+                opciones_sexo = ["Macho", "Hembra"]
+                sexo_valor = selected.get('sexo', 'Macho')  # valor por defecto
+
+                # Asegurarse de que el sexo esté en las opciones
+                if sexo_valor not in opciones_sexo:
+                    sexo_index = 0  # Por ejemplo, Macho como predeterminado
+                else:
+                    sexo_index = opciones_sexo.index(sexo_valor)
+
+                sexo = st.selectbox("Sexo", opciones_sexo, index=sexo_index)
+
+                estado = st.selectbox("Estado Médico", ["Alta", "Pendiente atención", "En tratamiento"],
+                                    index=["Alta", "Pendiente atención", "En tratamiento"].index(selected.get("estado", "Pendiente atención")))
+                historial_nuevo = st.text_input("Añadir al historial", placeholder="Ej: Vacunación")
+                actualizar = st.form_submit_button("Guardar Cambios")
+
+                if actualizar:
+                    try:
+                        data = {
+                            "edad": edad,
+                            "sexo": sexo,
+                            "estado": estado
+                        }
+                        res = requests.put(f"{API_URL}/mascotas/{selected['id_mascota']}", json=data)
+
+                        # Depuracion
+                        print("Código de respuesta:", res.status_code)
+                        print("Mensaje de respuesta:", res.text)
+                        print("Datos enviados:", data)
+                        print("URL usada:", f"{API_URL}/mascotas/{selected['id_mascota']}")
+
+                        if historial_nuevo.strip():
+                            fecha_actual = datetime.datetime.now().isoformat()
+                            historial_data = {
+                                "id_mascota": selected['id_mascota'],
+                                "id_vet": selected.get('id_vet'),  # Puede ser None
+                                "id_cliente": 1,  # Ajusta esto según contexto real
+                                "id_recepcionista": 1,  # Ajusta esto según contexto real
+                                "motivo": historial_nuevo,
+                                "fecha_hora": fecha_actual
+                            }
+                            res_historial = requests.post(f"{API_URL}/historial", json=historial_data)
+                            print("Respuesta crear historial:", res_historial.status_code, res_historial.text)
+
+                        if res.status_code == 200:
+                            st.success("Datos actualizados correctamente.")
+                        else:
+                            st.error("Error al actualizar mascota.")
+                    except Exception as e:
+                        st.error(f"Error al actualizar: {e}")
+
+elif pagina == "Historial":
+    st.title("Historial de Mascotas")
+    try:
+        response = requests.get(f"{API_URL}/mascotas")
+        mascotas = response.json() if response.status_code == 200 else []
+    except:
+        st.error("No se pudo obtener la lista de mascotas.")
+        mascotas = []
+
+    if not mascotas:
+        st.info("No hay mascotas registradas.")
+    else:
+        selected = st.selectbox("Selecciona una mascota:", mascotas,
+                                format_func=lambda x: f"{x['id_mascota']} - {x['nombre']}")
+
+        if selected:
+            try:
+                response = requests.get(f"{API_URL}/historial/{selected['id_mascota']}")
+                historial = response.json() if response.status_code == 200 else []
+            except:
+                historial = []
+
+            st.subheader(f"Historial de {selected['nombre']}")
+            if not historial:
+                st.warning("Esta mascota no tiene historial registrado.")
             else:
-                st.error("No se pudo registrar la mascota.")
+                for h in historial:
+                    st.markdown(f"- {h['motivo']} ({h['fecha_hora']})")
