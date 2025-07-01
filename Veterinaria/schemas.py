@@ -28,7 +28,7 @@ class MascotaResponse(MascotaCreate):
     id_mascota: int
 
     class Config:
-        orm_mode = True  # Permite convertir desde objetos SQLAlchemy
+        from_attributes = True
 
 class ConsultaResponse(BaseModel):
     id_consulta: int
