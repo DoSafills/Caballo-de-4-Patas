@@ -4,12 +4,11 @@ import datetime
 
 API_URL = "http://127.0.0.1:8000"
 
-def mostrar_veterinario(usuario):
+def mostrar_veterinario(veterinario):
     pagina = st.sidebar.selectbox("Ir a:", ["Registrar Mascota", "Gestión", "Historial"])
 
     if pagina == "Registrar Mascota":
-        st.title("Asistencia de Reserva - HOME PETS")
-        st.markdown("#### Precio de la consulta: CLP $5.000")
+        st.title(f"Panel Veterinario - Dr. {veterinario.nombre}")
 
         with st.form("form_mascota"):
             st.subheader("Datos de la Mascota")
@@ -25,7 +24,7 @@ def mostrar_veterinario(usuario):
 
             peso = st.text_input("Peso (kg)", placeholder="10.5")
             altura = st.text_input("Altura (cm)", placeholder="40")
-            id_vet = usuario.id_vet
+            id_vet = veterinario.id_vet
 
             submit = st.form_submit_button("Registrar")
 

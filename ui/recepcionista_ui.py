@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-from services.mascota_service import listar_mascotas, crear_mascota
+from services.mascota_service import obtener_mascotas, crear_mascota
 from services.consulta_service import crear_consulta, listar_consultas
 from services.usuario_service import listar_usuarios, crear_usuario
 
@@ -69,7 +69,7 @@ def mostrar_recepcionista(usuario):
     # --- Agendar Consulta ---
     with tabs[2]:
         st.header('Agendar Consulta')
-        mascotas = listar_mascotas()
+        mascotas = obtener_mascotas()
         vets = listar_usuarios('veterinario')
         clientes = listar_usuarios('cliente')
         mascota = st.selectbox('Mascota', mascotas, format_func=lambda m: m.nombre, key='cons_mascota')

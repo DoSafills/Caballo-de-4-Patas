@@ -1,4 +1,4 @@
-# main.py
+# api.py
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 
