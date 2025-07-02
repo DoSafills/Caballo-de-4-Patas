@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.ext.declarative import declared_attr
-
+import datetime
 Base = declarative_base()
 
 class Persona(Base):
@@ -21,51 +21,75 @@ class Persona(Base):
 class Admin(Persona):
     __tablename__ = 'admin'
     id_admin = Column(Integer, primary_key=True)
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
     contrasena = Column(String(50))
-    __mapper_args__ = {'polymorphic_identity': 'admin'}
+    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'admin',
+    }
 
 class Recepcionista(Persona):
     __tablename__ = 'recepcionista'
     id_recepcionista = Column(Integer, primary_key=True)
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
     contrasena = Column(String(50))
-    __mapper_args__ = {'polymorphic_identity': 'recepcionista'}
+    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'recepcionista',
+    }
 
 class Cliente(Persona):
     __tablename__ = 'cliente'
     id_cliente = Column(Integer, primary_key=True)
     rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
+    rut_vet_preferido = Column(Integer, ForeignKey('veterinario.rut'))
+
     mascotas = relationship("Mascota", back_populates="cliente")
-    __mapper_args__ = {'polymorphic_identity': 'cliente'}
+    vet_preferido = relationship("Veterinario", foreign_keys=[rut_vet_preferido])
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'cliente',
+    }
+
 
 class Veterinario(Persona):
     __tablename__ = 'veterinario'
     id_vet = Column(Integer, primary_key=True)
-    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
     especializacion = Column(String(255))
     contrasena = Column(String(255))
-    __mapper_args__ = {'polymorphic_identity': 'veterinario'}
+    rut = Column(String(50), ForeignKey('persona.rut'), unique=True)
 
+    __mapper_args__ = {
+        'polymorphic_identity': 'veterinario',
+    }
 
 class Mascota(Base):
     __tablename__ = 'mascota'
-    id_mascota = Column(Integer, primary_key=True)
-    nombre = Column(String(255))
-    raza = Column(String(255))
-    sexo = Column(String(255))
-    dieta = Column(String(255))
-    caracter = Column(String(255))
-    habitat = Column(String(255))
-    id_vet = Column(Integer, ForeignKey('veterinario.id_vet'))
-    edad = Column(Integer)
-    peso = Column(String(255))
-    altura = Column(String(255))
-    estado = Column(String(50), nullable=False, default="saludable")  
-    veterinario = relationship("Veterinario")
 
-    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'))
-    cliente = relationship("Cliente", back_populates="mascotas")  
+    id_mascota = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String)
+    raza = Column(String)
+    sexo = Column(String)
+    dieta = Column(String)
+    caracter = Column(String)
+    habitat = Column(String)
+    edad = Column(Integer)
+    peso = Column(String)
+    altura = Column(String)
+    estado = Column(String, default="Pendiente atención")
+
+    id_cliente = Column(Integer, ForeignKey('cliente.id_cliente'), nullable=True)
+
+    cliente = relationship("Cliente", back_populates="mascotas")
+    historiales = relationship("HistorialMedico", back_populates="mascota")
+class HistorialMedico(Base):
+    __tablename__ = "historial_medico"
+    id_historial = Column(Integer, primary_key=True, autoincrement=True)
+    fecha = Column(Date, default=datetime.date.today)
+    descripcion = Column(String, nullable=False)
+    id_mascota = Column(Integer, ForeignKey("mascota.id_mascota"))
+
+    mascota = relationship("Mascota", back_populates="historiales")
 
 class Consulta(Base):
     __tablename__ = 'consulta'
