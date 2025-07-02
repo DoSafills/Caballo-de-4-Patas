@@ -1,10 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 
-# schemas.py
-
-from pydantic import BaseModel
-from typing import Optional
 
 class UsuarioBase(BaseModel):
     rut: str
@@ -24,3 +20,23 @@ class UsuarioUpdate(BaseModel):
     edad: Optional[int] = None
     email: Optional[str] = None
     contrasena: Optional[str] = None
+
+
+
+class MascotaCreate(BaseModel):
+    nombre: str
+    raza: str
+    sexo: str
+    dieta: str
+    caracter: str
+    habitat: str
+    edad: int
+    peso: str
+    altura: str
+    id_cliente: Optional[int] = None
+
+class MascotaOut(MascotaCreate):
+    id_mascota: int
+
+    class Config:
+        orm_mode = True
