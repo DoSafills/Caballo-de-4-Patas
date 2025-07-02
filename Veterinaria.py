@@ -7,6 +7,9 @@ from models import create_tables
 import os
 from controller import MascotaController
 from factories import VentanaFactory
+import requests
+
+API_URL = "http://127.0.0.1:8000"
 
 # FACTORY
 class MascotaFactory:
@@ -149,20 +152,24 @@ class VeterinariaApp:
                 "dieta": self.dieta.get(),
                 "caracter": self.caracter.get(),
                 "habitat": self.habitat.get(),
-                "edad": self.edad.get().split()[0],
+                "edad": int(self.edad.get().split()[0]),
                 "peso": self.peso.get(),
                 "altura": self.altura.get()
-           
             }
-            mascota = self.controller.registrar_mascota(datos)
-            messagebox.showinfo("Éxito", f"Mascota '{mascota.nombre}' registrada correctamente.")
 
-            for var in [self.nombre_mascota, self.raza, self.sexo, self.edad, self.dieta, self.caracter, self.habitat, self.peso, self.altura]:
-                var.set("")
+            response = requests.post("http://127.0.0.1:8000/veterinaria/registrar", json=datos)
+
+            if response.status_code == 200:
+                mascota = response.json()
+                messagebox.showinfo("Éxito", f"Mascota '{mascota['nombre']}' registrada correctamente.")
+                for var in [self.nombre_mascota, self.raza, self.sexo, self.edad, self.dieta, self.caracter, self.habitat, self.peso, self.altura]:
+                    var.set("")
+            else:
+                detalle = response.json().get("detail", "No se pudo registrar la mascota")
+                messagebox.showerror("Error", f"Error del servidor: {detalle}")
 
         except Exception as e:
-            db.rollback()
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", f"No se pudo conectar con el servidor:\n{e}")
 
 if __name__ == "__main__":
     root = ctk.CTk()

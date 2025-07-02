@@ -3,6 +3,9 @@ from crud import obtener_usuarios_por_tipo, eliminar_usuario, actualizar_usuario
 from database import SessionLocal
 from tkinter import messagebox
 from iterator import ColeccionUsuarios
+import requests
+
+API_URL = "http://127.0.0.1:8000"
 
 class AdminApp(ctk.CTkFrame):
     def __init__(self, master):
@@ -57,6 +60,8 @@ class AdminApp(ctk.CTkFrame):
 
         self.cargar_usuarios("todos")
 
+
+    
     def cargar_usuarios(self, tipo):
         for widget in self.frame_tabla.winfo_children():
             widget.destroy()
@@ -65,54 +70,124 @@ class AdminApp(ctk.CTkFrame):
         for i, texto in enumerate(encabezados):
             ctk.CTkLabel(self.frame_tabla, text=texto.upper(), font=ctk.CTkFont(weight="bold")).grid(row=0, column=i, padx=5, pady=5)
 
-        usuarios = obtener_usuarios_por_tipo(self.db, tipo)
-        coleccion = ColeccionUsuarios(usuarios)
+        tipos = [tipo] if tipo != "todos" else ["admin", "recepcionista", "veterinario", "cliente", "mascota"]
+        fila = 1
 
-        for fila, usuario in enumerate(coleccion, start=1):
-            ctk.CTkLabel(self.frame_tabla, text=usuario.__class__.__name__).grid(row=fila, column=0, padx=5, pady=2)
-            ctk.CTkLabel(self.frame_tabla, text=usuario.rut).grid(row=fila, column=1, padx=5, pady=2)
-            ctk.CTkLabel(self.frame_tabla, text=getattr(usuario, "nombre", "")).grid(row=fila, column=2, padx=5, pady=2)
+        for t in tipos:
+            try:
+                res = requests.get(f"http://127.0.0.1:8000/admin/usuarios/{t}")
+                if res.status_code == 200:
+                    usuarios = res.json()
+                    for usuario in usuarios:
+                        ctk.CTkLabel(self.frame_tabla, text=t).grid(row=fila, column=0, padx=5, pady=2)
+                        ctk.CTkLabel(self.frame_tabla, text=usuario.get("rut", "")).grid(row=fila, column=1, padx=5, pady=2)
+                        ctk.CTkLabel(self.frame_tabla, text=usuario.get("nombre", "")).grid(row=fila, column=2, padx=5, pady=2)
+                        fila += 1
+                else:
+                    messagebox.showwarning("Error", f"No se pudo obtener usuarios de tipo {t}: {res.status_code}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Fallo al conectar con el servidor para tipo {t}:\n{e}")
 
     def eliminar(self):
         rut = self.rut_entry.get().strip()
         tipo = self.tipo_usuario.get().strip()
 
-        if eliminar_usuario(self.db, rut, tipo):
-            messagebox.showinfo("exito", "usuario eliminado")
-            self.rut_entry.delete(0, 'end')
-            self.cargar_usuarios(tipo)
-        else:
-            messagebox.showerror("error", "no se pudo eliminar")
+        if not rut or not tipo or tipo == "todos":
+            messagebox.showerror("Error", "Debes especificar un tipo de usuario válido y un RUT")
+            return
+
+        try:
+            response = requests.delete(f"{API_URL}/admin/eliminar/{tipo}/{rut}")
+            if response.status_code == 200:
+                messagebox.showinfo("Éxito", "Usuario eliminado correctamente")
+                self.rut_entry.delete(0, 'end')
+                self.cargar_usuarios(tipo)
+            else:
+                detalle = response.json().get("detail", "No se pudo eliminar el usuario")
+                messagebox.showerror("Error", f"Error: {detalle}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo conectar con el servidor:\n{e}")
+
 
 
     def actualizar(self):
-        rut = self.rut_entry.get()
-        tipo = self.tipo_usuario.get()
-        nuevos_datos = {"nombre": "nuevo nombre"}
-        if actualizar_usuario(self.db, rut, tipo, nuevos_datos):
-            messagebox.showinfo("exito", "usuario actualizado")
-            self.cargar_usuarios(tipo)
-        else:
-            messagebox.showerror("error", "no se pudo actualizar")
+        rut = self.rut_entry.get().strip()
+        tipo = self.tipo_usuario.get().strip()
+
+        if not rut or tipo == "todos":
+            messagebox.showerror("Error", "Debes especificar un RUT y un tipo de usuario válido.")
+            return
+
+        nuevos_datos = {}
+
+        for campo, entry in self.crear_entries.items():
+            valor = entry.get().strip()
+            if valor:
+                if campo == "edad":
+                    try:
+                        valor = int(valor)
+                    except ValueError:
+                        messagebox.showerror("Error", "Edad debe ser un número.")
+                        return
+            nuevos_datos[campo] = valor
+
+        if tipo != "veterinario":
+            nuevos_datos.pop("especializacion", None)
+
+        if not nuevos_datos:
+            messagebox.showwarning("Advertencia", "No se ingresaron datos nuevos para actualizar.")
+            return
+
+        try:
+            response = requests.put(f"{API_URL}/admin/actualizar/{tipo}/{rut}", json=nuevos_datos)
+            if response.status_code == 200:
+                messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
+                self.cargar_usuarios(tipo)
+
+                # Limpiar campos del formulario
+                self.rut_entry.delete(0, 'end')
+                for entry in self.crear_entries.values():
+                    entry.delete(0, 'end')
+
+            else:
+                detalle = response.json().get("detail", "No se pudo actualizar el usuario.")
+                messagebox.showerror("Error", f"Error: {detalle}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo conectar con el servidor:\n{e}")
 
     def crear(self):
         tipo = self.tipo_crear.get()
         datos = {}
+
+        # Recolectar datos del formulario
         for campo, entry in self.crear_entries.items():
             valor = entry.get()
+            if not valor and campo in ["rut", "nombre", "apellido", "edad", "email", "contrasena"]:
+                messagebox.showerror("error", f"El campo '{campo}' es obligatorio")
+                return
             if campo == "edad":
                 try:
                     valor = int(valor)
-                except:
-                    messagebox.showerror("error", "edad debe ser un numero")
+                except ValueError:
+                    messagebox.showerror("error", "Edad debe ser un número")
                     return
             datos[campo] = valor
 
+    # Quitar especialización si no es veterinario
         if tipo != "veterinario":
             datos.pop("especializacion", None)
 
-        if crear_usuario(self.db, tipo, datos):
-            messagebox.showinfo("exito", "usuario creado")
-            self.cargar_usuarios("todos")
-        else:
-            messagebox.showerror("error", "no se pudo crear")
+    # Agregar el tipo al payload
+        datos["tipo"] = tipo
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/admin/crear", json=datos)
+            if response.status_code == 200:
+                messagebox.showinfo("éxito", "Usuario creado exitosamente")
+                self.cargar_usuarios("todos")
+            else:
+                detalle = response.json().get("detail", "No se pudo crear el usuario")
+                messagebox.showerror("error", f"Error: {detalle}")
+        except Exception as e:
+            messagebox.showerror("error", f"No se pudo conectar con el servidor:\n{e}")
+

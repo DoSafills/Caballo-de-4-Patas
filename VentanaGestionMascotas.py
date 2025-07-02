@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from tkinter import ttk
-
+from controller import MascotaController
+import requests
 class VentanaGestionMascotas:
     def __init__(self, root, controller):
         self.root = root
@@ -62,20 +63,36 @@ class VentanaGestionMascotas:
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        mascotas = self.controller.db.query(self.controller.model_class).all()
+        try:
+    # URL base de la API FastAPI
+            url = "http://127.0.0.1:8000/veterinaria/mascotas"
+            response = requests.get(url)
+            response.raise_for_status()  # Lanza excepción si no fue exitosa
 
-        if not mascotas:
-            messagebox.showinfo("Información", "No hay mascotas registradas.")
-        else:
+            mascotas = response.json()
+
+            if not mascotas:
+                messagebox.showinfo("Información", "No hay mascotas registradas.")
+                return
+
             for m in mascotas:
                 self.tree.insert("", "end", values=(
-                    m.id_mascota,
-                    m.nombre,
-                    m.raza,
-                    m.edad,
-                    m.sexo,
-                    m.estado
+                m.get("id_mascota"),
+                m.get("nombre"),
+                m.get("raza"),
+                m.get("edad"),
+                m.get("sexo"),
+                m.get("estado", "Desconocido")  # Valor por defecto si falta
                 ))
+
+        except requests.exceptions.ConnectionError:
+            messagebox.showerror("Error de conexión", "No se pudo conectar con la API en http://127.0.0.1:8000.\n¿Está el servidor en ejecución?")
+        except requests.exceptions.RequestException as e:
+            messagebox.showerror("Error de petición", f"Error al consultar la API:\n{str(e)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Ocurrió un error inesperado:\n{str(e)}")
+
+
 
     def cargar_mascota(self, event):
         selected_item = self.tree.focus()

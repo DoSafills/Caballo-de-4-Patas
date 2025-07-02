@@ -1,8 +1,10 @@
 from models import Mascota
 from models import Mascota, HistorialMedico
+import requests
 
 class MascotaController:
     def __init__(self, db_session, factory):
+
         self.db = db_session
         self.factory = factory
         self.model_class = Mascota
@@ -57,3 +59,10 @@ class MascotaController:
             self.db.rollback()
             print(f"[ERROR] al agregar historial: {e}")
             raise e
+    def listar_mascotas(self):
+        try:
+            response = requests.get(f"{self.base_url}/mascotas/")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error al conectar con la API: {e}")
