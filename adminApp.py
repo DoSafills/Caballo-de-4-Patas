@@ -92,23 +92,68 @@ class AdminApp(ctk.CTkFrame):
         rut = self.rut_entry.get().strip()
         tipo = self.tipo_usuario.get().strip()
 
-        if eliminar_usuario(self.db, rut, tipo):
-            messagebox.showinfo("exito", "usuario eliminado")
-            self.rut_entry.delete(0, 'end')
-            self.cargar_usuarios(tipo)
-        else:
-            messagebox.showerror("error", "no se pudo eliminar")
+        if not rut or not tipo or tipo == "todos":
+            messagebox.showerror("Error", "Debes especificar un tipo de usuario válido y un RUT")
+            return
+
+        try:
+            response = requests.delete(f"{API_URL}/admin/eliminar/{tipo}/{rut}")
+            if response.status_code == 200:
+                messagebox.showinfo("Éxito", "Usuario eliminado correctamente")
+                self.rut_entry.delete(0, 'end')
+                self.cargar_usuarios(tipo)
+            else:
+                detalle = response.json().get("detail", "No se pudo eliminar el usuario")
+                messagebox.showerror("Error", f"Error: {detalle}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo conectar con el servidor:\n{e}")
+
 
 
     def actualizar(self):
-        rut = self.rut_entry.get()
-        tipo = self.tipo_usuario.get()
-        nuevos_datos = {"nombre": "nuevo nombre"}
-        if actualizar_usuario(self.db, rut, tipo, nuevos_datos):
-            messagebox.showinfo("exito", "usuario actualizado")
-            self.cargar_usuarios(tipo)
-        else:
-            messagebox.showerror("error", "no se pudo actualizar")
+        rut = self.rut_entry.get().strip()
+        tipo = self.tipo_usuario.get().strip()
+
+        if not rut or tipo == "todos":
+            messagebox.showerror("Error", "Debes especificar un RUT y un tipo de usuario válido.")
+            return
+
+        nuevos_datos = {}
+
+        for campo, entry in self.crear_entries.items():
+            valor = entry.get().strip()
+            if valor:
+                if campo == "edad":
+                    try:
+                        valor = int(valor)
+                    except ValueError:
+                        messagebox.showerror("Error", "Edad debe ser un número.")
+                        return
+            nuevos_datos[campo] = valor
+
+        if tipo != "veterinario":
+            nuevos_datos.pop("especializacion", None)
+
+        if not nuevos_datos:
+            messagebox.showwarning("Advertencia", "No se ingresaron datos nuevos para actualizar.")
+            return
+
+        try:
+            response = requests.put(f"{API_URL}/admin/actualizar/{tipo}/{rut}", json=nuevos_datos)
+            if response.status_code == 200:
+                messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
+                self.cargar_usuarios(tipo)
+
+                # Limpiar campos del formulario
+                self.rut_entry.delete(0, 'end')
+                for entry in self.crear_entries.values():
+                    entry.delete(0, 'end')
+
+            else:
+                detalle = response.json().get("detail", "No se pudo actualizar el usuario.")
+                messagebox.showerror("Error", f"Error: {detalle}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo conectar con el servidor:\n{e}")
 
     def crear(self):
         tipo = self.tipo_crear.get()
