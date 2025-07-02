@@ -1,109 +1,67 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from caballo_api.database import get_db
-from caballo_api import models
-from caballo_api.schemas import UsuarioBase, MascotaCreate
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from datetime import datetime
+
+from caballo_api.database import get_db
+from caballo_api.schemas import (
+    UsuarioBase,
+    ConsultaCreate,
+    ConsultaUpdate,
+    ClienteOut,
+    ConsultaOut
+)
+from caballo_api.services.recepcionista_service import RecepcionistaService
 
 router = APIRouter(prefix="/recepcionista", tags=["Recepcionista"])
 
-# ============================
-# CLIENTES
-# ============================
+@router.post("/clientes/", response_model=ClienteOut)
+def crear_cliente_api(cliente: UsuarioBase, db: Session = Depends(get_db)):
+    service = RecepcionistaService(db)
+    try:
+        nuevo = service.crear_cliente(
+            rut=cliente.rut,
+            nombre=cliente.nombre,
+            apellido=cliente.apellido,
+            edad=cliente.edad,
+            email=cliente.email
+        )
+        return nuevo
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/clientes/", response_model=dict)
-def crear_cliente(cliente: UsuarioBase, db: Session = Depends(get_db)):
-    db_persona = db.query(models.Persona).filter_by(rut=cliente.rut).first()
-    if db_persona:
-        raise HTTPException(status_code=400, detail="El cliente ya existe")
+@router.get("/clientes/", response_model=List[ClienteOut])
+def listar_clientes_api(db: Session = Depends(get_db)):
+    return RecepcionistaService(db).listar_clientes()
 
-    nueva_persona = models.Cliente(
-        rut=cliente.rut,
-        nombre=cliente.nombre,
-        apellido=cliente.apellido,
-        edad=cliente.edad,
-        email=cliente.email
-    )
-    db.add(nueva_persona)
-    db.commit()
-    return {"mensaje": "Cliente creado con éxito"}
-
-
-@router.get("/clientes/{rut}", response_model=dict)
-def obtener_cliente_por_rut(rut: str, db: Session = Depends(get_db)):
-    cliente = db.query(models.Cliente).filter_by(rut=rut).first()
-    if not cliente:
+@router.get("/clientes/{rut}", response_model=ClienteOut)
+def obtener_cliente_api(rut: str, db: Session = Depends(get_db)):
+    try:
+        return RecepcionistaService(db).obtener_cliente(rut)
+    except LookupError:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    return {
-        "id": cliente.id_cliente,
-        "nombre": cliente.nombre,
-        "apellido": cliente.apellido,
-        "email": cliente.email
-    }
 
-# ============================
-# CONSULTAS
-# ============================
+@router.post("/consultas/", response_model=ConsultaOut)
+def agendar_consulta_api(consulta: ConsultaCreate, db: Session = Depends(get_db)):
+    try:
+        return RecepcionistaService(db).agendar_consulta(**consulta.dict())
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-class ConsultaCreate(BaseModel):
-    id_cliente: int
-    id_mascota: int
-    id_vet: int
-    id_recepcionista: int
-    fecha_hora: datetime
-    motivo: str
+@router.get("/consultas/", response_model=List[ConsultaOut])
+def listar_consultas_api(db: Session = Depends(get_db)):
+    return RecepcionistaService(db).listar_consultas()
 
-class ConsultaUpdate(BaseModel):
-    id_cliente: Optional[int]
-    id_mascota: Optional[int]
-    id_vet: Optional[int]
-    id_recepcionista: Optional[int]
-    fecha_hora: Optional[datetime]
-    motivo: Optional[str]
-
-@router.post("/consultas/", response_model=dict)
-def crear_consulta(consulta: ConsultaCreate, db: Session = Depends(get_db)):
-    nueva = models.Consulta(**consulta.dict())
-    db.add(nueva)
-    db.commit()
-    return {"mensaje": "Consulta creada"}
-
-@router.get("/consultas/", response_model=List[dict])
-def obtener_consultas(db: Session = Depends(get_db)):
-    consultas = db.query(models.Consulta).order_by(models.Consulta.fecha_hora).all()
-    return [
-        {
-            "id": c.id_consulta,
-            "cliente": c.id_cliente,
-            "mascota": c.id_mascota,
-            "veterinario": c.id_vet,
-            "recepcionista": c.id_recepcionista,
-            "fecha_hora": c.fecha_hora,
-            "motivo": c.motivo
-        }
-        for c in consultas
-    ]
-
-@router.put("/consultas/{id}", response_model=dict)
-def actualizar_consulta(id: int, consulta: ConsultaUpdate, db: Session = Depends(get_db)):
-    db_consulta = db.query(models.Consulta).filter_by(id_consulta=id).first()
-    if not db_consulta:
+@router.put("/consultas/{id}", response_model=ConsultaOut)
+def actualizar_consulta_api(id: int, consulta: ConsultaUpdate, db: Session = Depends(get_db)):
+    try:
+        return RecepcionistaService(db).actualizar_consulta(id, **consulta.dict(exclude_unset=True))
+    except LookupError:
         raise HTTPException(status_code=404, detail="Consulta no encontrada")
 
-    for campo, valor in consulta.dict(exclude_unset=True).items():
-        setattr(db_consulta, campo, valor)
-
-    db.commit()
-    return {"mensaje": "Consulta actualizada"}
-
-@router.delete("/consultas/{id}", response_model=dict)
-def eliminar_consulta(id: int, db: Session = Depends(get_db)):
-    consulta = db.query(models.Consulta).filter_by(id_consulta=id).first()
-    if not consulta:
+@router.delete("/consultas/{id}", status_code=204)
+def eliminar_consulta_api(id: int, db: Session = Depends(get_db)):
+    try:
+        RecepcionistaService(db).eliminar_consulta(id)
+    except LookupError:
         raise HTTPException(status_code=404, detail="Consulta no encontrada")
-
-    db.delete(consulta)
-    db.commit()
-    return {"mensaje": "Consulta eliminada"}

@@ -230,10 +230,3 @@ def actualizar_estado_mascota(db: Session, id_mascota: int, nuevo_estado: str):
         db.rollback()
         logger.error(f"Error al actualizar estado de mascota {id_mascota}: {e}")
         return None
-
-def crear_veterinario(db, data: dict):
-    vet = Veterinario(**data)  # Asegúrate que las claves coincidan con los campos del modelo
-    db.add(vet)
-    db.commit()
-    db.refresh(vet)
-    return vet
