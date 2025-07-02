@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
+
 
 
 class UsuarioBase(BaseModel):
@@ -38,5 +40,31 @@ class MascotaCreate(BaseModel):
 class MascotaOut(MascotaCreate):
     id_mascota: int
 
+    class Config:
+        orm_mode = True
+
+class ClienteOut(UsuarioBase):
+    id_cliente: int
+    class Config:
+        orm_mode = True
+
+class ConsultaCreate(BaseModel):
+    id_cliente: int
+    id_mascota: int
+    id_vet: int
+    id_recepcionista: int
+    fecha_hora: datetime
+    motivo: str
+
+class ConsultaUpdate(BaseModel):
+    id_cliente: Optional[int]
+    id_mascota: Optional[int]
+    id_vet: Optional[int]
+    id_recepcionista: Optional[int]
+    fecha_hora: Optional[datetime]
+    motivo: Optional[str]
+
+class ConsultaOut(ConsultaCreate):
+    id_consulta: int
     class Config:
         orm_mode = True
