@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
+from typing import Optional
 
 
 class UsuarioBase(BaseModel):
@@ -40,3 +42,16 @@ class MascotaOut(MascotaCreate):
 
     class Config:
         orm_mode = True
+        from_attributes = True
+
+class HistorialCreate(BaseModel):
+    descripcion: str
+    id_mascota: int
+
+class MascotaUpdate(BaseModel):
+    edad: Optional[int]
+    sexo: Optional[str]
+    estado: Optional[str]  # Esto si lo manejas desde la interfaz
+
+    class Config:
+        from_attributes = True

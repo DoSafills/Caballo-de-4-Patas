@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from models import Admin, Cliente, Consulta, Mascota, Persona, Recepcionista, Veterinario
 from factoriUsuario import FactoriUsuario
 from datetime import datetime
+import models
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ MODELOS = {
     "recepcionista": Recepcionista,
     "veterinario": Veterinario
 }
+
 
 # --- CRUD de usuarios ---
 def obtener_usuarios_por_tipo(db: Session, tipo: str):
@@ -73,6 +75,13 @@ def eliminar_usuario(db: Session, rut: str, tipo: str):
         db.rollback()
         logger.error(f"Error al eliminar usuario {rut}: {e}")
         return False
+    
+def crear_veterinario(db: Session, data: dict):
+    nuevo = models.Veterinario(**data)
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
 
 # --- Métodos específicos por tipo de usuario ---
 def obtener_admin_por_rut(db: Session, rut: str):

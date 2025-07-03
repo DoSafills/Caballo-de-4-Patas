@@ -24,20 +24,27 @@ class MascotaController:
 
     def actualizar_mascota(self, id_mascota, nuevos_datos):
         try:
-            mascota = self.db.query(self.model_class).get(id_mascota)
-            if mascota is None:
-                raise Exception("Mascota no encontrada")
+            url = f"http://127.0.0.1:8000/veterinaria/mascotas/{id_mascota}"
+            response = requests.put(url, json=nuevos_datos)
 
-            for clave, valor in nuevos_datos.items():
-                setattr(mascota, clave, valor)
-
-            self.db.commit()
-            return mascota
-
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise Exception(f"No se pudo actualizar: {response.json().get('detail', 'Error desconocido')}")
         except Exception as e:
-            self.db.rollback()
-            print(f"[ERROR] al actualizar mascota: {e}")
-            raise e
+            print(f"[ERROR] al actualizar mascota vía API: {e}")
+            raise
+
+    def obtener_mascota_por_id(self, id_mascota: int):
+        try:
+            url = f"http://127.0.0.1:8000/veterinaria/mascotas/{id_mascota}"
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"No se pudo obtener información de la mascota: {e}")
+
+
 
     def obtener_historial_por_mascota(self, id_mascota):
         try:
@@ -48,17 +55,19 @@ class MascotaController:
 
     def agregar_historial(self, id_mascota, descripcion):
         try:
-            nuevo = HistorialMedico(
-                id_mascota=id_mascota,
-                descripcion=descripcion
-            )
-            self.db.add(nuevo)
-            self.db.commit()
-            return nuevo
+            datos = {
+                "descripcion": descripcion,
+                "id_mascota": id_mascota
+            }
+            response = requests.post("http://127.0.0.1:8000/historial/", json=datos)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise Exception(response.json().get("detail", "Error al registrar historial"))
         except Exception as e:
-            self.db.rollback()
-            print(f"[ERROR] al agregar historial: {e}")
-            raise e
+            print(f"[ERROR] al agregar historial vía API: {e}")
+            raise
+
     def listar_mascotas(self):
         try:
             response = requests.get(f"{self.base_url}/mascotas/")
@@ -66,3 +75,4 @@ class MascotaController:
             return response.json()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error al conectar con la API: {e}")
+        

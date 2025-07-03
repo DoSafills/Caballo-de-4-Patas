@@ -23,7 +23,6 @@ class VentanaGestionMascotas:
             self.tree.heading(col, text=col.capitalize())
             self.tree.column(col, anchor="center")
 
-        self.tree.bind("<Double-1>", self.cargar_mascota)
 
         # Formulario para modificar datos
         form_frame = ctk.CTkFrame(self.window)
@@ -48,6 +47,10 @@ class VentanaGestionMascotas:
 
         self.boton_actualizar = ctk.CTkButton(form_frame, text="Guardar Cambios", command=self.actualizar_mascota, fg_color="#27ae60", text_color="white")
         self.boton_actualizar.pack(pady=10)
+
+        # Botón para seleccionar la mascota
+        ctk.CTkButton(form_frame, text="Seleccionar Mascota", command=self.seleccionar_mascota, fg_color="#f39c12", text_color="black").pack(pady=5)
+
 
         self.id_mascota_seleccionada = None
 
@@ -91,6 +94,24 @@ class VentanaGestionMascotas:
             messagebox.showerror("Error de petición", f"Error al consultar la API:\n{str(e)}")
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error inesperado:\n{str(e)}")
+    
+    def seleccionar_mascota(self):
+        selected_item = self.tree.focus()
+        if not selected_item:
+            messagebox.showwarning("Advertencia", "Debe seleccionar una mascota de la lista.")
+            return
+    
+        values = self.tree.item(selected_item, 'values')
+        self.id_mascota_seleccionada = int(values[0])
+    
+        try:
+            mascota = self.controller.obtener_mascota_por_id(self.id_mascota_seleccionada)
+            if mascota:
+                self.edad_var.set(str(mascota["edad"]))
+                self.sexo_var.set(mascota["sexo"])
+                self.estado_var.set(mascota.get("estado", ""))
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo obtener información de la mascota:\n{e}")
 
 
 
