@@ -13,7 +13,7 @@ from datetime import datetime
 from models import Consulta, Cliente, Mascota, Veterinario, Recepcionista
 from factories import VentanaFactory
 from controller import MascotaController  # <-- Controlador
-
+import requests
 #  FACTORY
 class MascotaFactory:
     @staticmethod
@@ -135,17 +135,9 @@ class GestionHorasApp:
         email = self.cliente_email_entry.get().strip()
         vet_preferido = self.cliente_vet_entry.get().strip()
 
-        if not all([rut, nombre, apellido, edad, email, vet_preferido]):
-            messagebox.showerror("Error", "Todos los campos del cliente son obligatorios.")
+        if not all([rut, nombre, apellido, edad, email]):
+            messagebox.showerror("Error", "Todos los campos obligatorios deben estar completos.")
             return
-        
-        rut_vet = None
-        if vet_preferido:
-            vet = obtener_veterinario_por_rut(self.db, vet_preferido)
-            if vet:
-                rut_vet = vet.rut
-            else:
-                messagebox.showwarning("Advertencia", "Veterinario preferido no encontrado. Se guardará sin preferencia.")
 
         try:
             edad = int(edad)
@@ -153,13 +145,26 @@ class GestionHorasApp:
             messagebox.showerror("Error", "La edad debe ser un número.")
             return
 
-        cliente = crear_cliente(self.db, rut, nombre, apellido, edad, email, rut_vet)
-        if cliente:
+        data = {
+            "rut": rut,
+            "nombre": nombre,
+            "apellido": apellido,
+            "edad": edad,
+            "email": email,
+            "rut_vet_preferido": vet_preferido if vet_preferido else None
+        }
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/recepcionista/clientes/", json=data)
+            response.raise_for_status()  # lanza error si status >= 400
             messagebox.showinfo("Éxito", "Cliente creado correctamente.")
-            for entry in [self.cliente_rut_entry, self.cliente_nombre_entry, self.cliente_apellido_entry, self.cliente_edad_entry, self.cliente_email_entry,self.cliente_vet_entry]:
+            for entry in [self.cliente_rut_entry, self.cliente_nombre_entry, self.cliente_apellido_entry, self.cliente_edad_entry, self.cliente_email_entry, self.cliente_vet_entry]:
                 entry.delete(0, tk.END)
-        else:
-            messagebox.showerror("Error", "No se pudo crear el cliente.")
+        except requests.exceptions.HTTPError as errh:
+            detail = response.json().get("detail", "No se pudo crear el cliente.")
+            messagebox.showerror("Error HTTP", detail)
+        except requests.exceptions.RequestException as err:
+            messagebox.showerror("Error", f"No se pudo conectar al servidor: {err}")
 
     def agendar_hora(self):
         rut_cliente = self.rut_cliente_entry.get().strip()
@@ -278,11 +283,28 @@ class GestionHorasApp:
         self.listbox.delete(0, tk.END)
         self.horas_data = []
 
-        consultas = self.db.query(Consulta).order_by(Consulta.fecha_hora).all()
-        for c in consultas:
-            display_text = f"ID: {c.id}, Cliente: {c.id_cliente}, Mascota: {c.id_mascota}, Vet: {c.id_veterinario}, Fecha y Hora: {c.fecha_hora}, Motivo: {c.motivo}"
-            self.listbox.insert(tk.END, display_text)
-            self.horas_data.append(c)
+        try:
+            response = requests.get("http://127.0.0.1:8000/recepcionista/consultas/")
+            response.raise_for_status()
+            consultas = response.json()
+
+            for c in consultas:
+        # Formatear fecha y hora de forma segura
+                try:
+                    fecha_str = datetime.fromisoformat(c["fecha_hora"]).strftime("%Y-%m-%d %H:%M")
+                except Exception:
+                    fecha_str = c["fecha_hora"]  # fallback sin formato
+
+                display_text = (
+                    f"ID: {c['id_consulta']}, Cliente: {c['id_cliente']}, "
+                    f"Mascota: {c['id_mascota']}, Vet: {c['id_vet']}, "
+                    f"Fecha y Hora: {fecha_str}, Motivo: {c['motivo']}"
+                )
+                self.listbox.insert(tk.END, display_text)
+                self.horas_data.append(c)
+
+        except requests.exceptions.RequestException as e:
+            messagebox.showerror("Error", f"No se pudieron cargar las consultas:\n{e}")
 
     def limpiar_campos_formulario(self):
         for entry in [self.rut_cliente_entry, self.nombre_mascota_entry, self.rut_veterinario_entry, self.rut_recepcionista_entry, self.fecha_entry, self.hora_entry, self.motivo_entry]:
@@ -326,9 +348,18 @@ class GestionHorasApp:
 
     def mostrar_clientes(self):
         self.listbox_clientes.delete(0, tk.END)
-        clientes = obtener_todos_los_clientes(self.db)
-        for cliente in clientes:
-            self.listbox_clientes.insert(tk.END, f"{cliente.rut} - {cliente.nombre} {cliente.apellido}")
+
+        try:
+            response = requests.get("http://127.0.0.1:8000/recepcionista/clientes/")
+            response.raise_for_status()  # lanza excepción si hay error
+
+            clientes = response.json()  # lista de dicts
+
+            for cliente in clientes:
+                self.listbox_clientes.insert(tk.END, f"{cliente['rut']} - {cliente['nombre']} {cliente['apellido']}")
+
+        except requests.exceptions.RequestException as e:
+            messagebox.showerror("Error", f"No se pudo obtener la lista de clientes:\n{e}")
 
     def seleccionar_cliente(self, event):
         seleccion = self.listbox_clientes.curselection()

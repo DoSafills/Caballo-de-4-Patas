@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
-
+from typing import Optional, List
+from datetime import datetime, date
 
 class UsuarioBase(BaseModel):
     rut: str
@@ -37,6 +37,34 @@ class MascotaCreate(BaseModel):
 
 class MascotaOut(MascotaCreate):
     id_mascota: int
+
+    class Config:
+        orm_mode = True
+
+class ConsultaCreate(BaseModel):
+    id_cliente: int
+    id_mascota: int
+    id_vet: int
+    id_recepcionista: int
+    fecha_hora: datetime
+    motivo: str
+
+class ConsultaResponse(ConsultaCreate):
+    id_consulta: int
+
+class EstadoUpdate(BaseModel):
+    estado: str
+
+class ClienteCreate(BaseModel):
+    rut: str
+    nombre: str
+    apellido: str
+    edad: int
+    email: str
+    rut_vet_preferido: Optional[str] = None
+
+class ClienteResponse(ClienteCreate):
+    id_cliente: int
 
     class Config:
         orm_mode = True
